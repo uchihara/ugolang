@@ -83,10 +83,14 @@ func Exec(code string) int {
   for _, c := range code {
     codes = append(codes, c)
   }
-  node := expr()
-  dprintf("node=%v\n", node)
-  n := eval(node)
-  return n
+  nodes := prog()
+  ret := 0
+  for _, node := range nodes {
+    eval(&node)
+    dprintf("node=%v\n", node)
+    ret = eval(&node)
+  }
+  return ret
 }
 
 func eval(node *Node) int {
@@ -142,6 +146,21 @@ func dprintf(f string, param ...interface{}) {
   }
 
   fmt.Printf(f, param...)
+}
+
+func prog() []Node {
+  nodes := make([]Node, 0)
+  for ; len(codes) > 0; {
+    node := stmt()
+    nodes = append(nodes, *node)
+  }
+  return nodes
+}
+
+func stmt() *Node {
+  node := expr()
+  expect(';')
+  return node
 }
 
 func expr() *Node {

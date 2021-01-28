@@ -11,23 +11,27 @@ func TestUgolang(t *testing.T) {
   }
   tts := []test{
     {
-      code: "1",
+      code: "1;",
       want: 1,
     },
     {
-      code: "1+2",
+      code: "1;1+2;",
       want: 3,
     },
     {
-      code: "1+2+3",
+      code: "1+2;",
+      want: 3,
+    },
+    {
+      code: "1+2+3;",
       want: 6,
     },
     {
-      code: "1+2*3",
+      code: "1+2*3;",
       want: 7,
     },
     {
-      code: "(1+2)*3",
+      code: "(1+2)*3;",
       want: 9,
     },
   }
