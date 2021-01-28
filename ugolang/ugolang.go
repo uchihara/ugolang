@@ -20,12 +20,13 @@ func (s *stackType) pop() int {
 
 var codes []rune
 
-
-func WriteCode(code string) {
+func Exec(code string) int {
   codes = make([]rune, 0)
   for _, c := range code {
     codes = append(codes, c)
   }
+  expr()
+  return stack.pop()
 }
 
 func Eval() int {

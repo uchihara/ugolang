@@ -8,9 +8,7 @@ import (
 )
 
 func main() {
-  var codes []rune
   code := os.Args[1]
-  ugolang.WriteCode(code)
-  n := ugolang.Eval()
+  n := ugolang.Exec(code)
   fmt.Printf("%s=%d\n", code, n)
 }

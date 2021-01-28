@@ -32,8 +32,7 @@ func TestUgolang(t *testing.T) {
     },
   }
   for _, tt := range tts {
-    WriteCode(tt.code)
-    actual := Eval()
+    actual := Exec(tt.code)
     if actual != tt.want {
       t.Errorf("%s expect %d but got %d", tt.code, tt.want, actual)
     }
