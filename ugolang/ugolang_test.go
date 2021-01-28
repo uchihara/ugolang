@@ -19,6 +19,18 @@ func TestUgolang(t *testing.T) {
       want: 3,
     },
     {
+      code: "a;",
+      want: 0,
+    },
+    {
+      code: "a=1;",
+      want: 1,
+    },
+    {
+      code: "a=1;a+2;",
+      want: 3,
+    },
+    {
       code: "1+2;",
       want: 3,
     },

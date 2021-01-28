@@ -20,12 +20,25 @@ func (s *stackType) pop() int {
   return n
 }
 
+type varsType map[rune]int
+var vars varsType = map[rune]int{}
+
+func (v varsType) Get(name rune) int {
+  return v[name]
+}
+
+func (v varsType) Set(name rune, val int) {
+  v[name] = val
+}
+
 type NodeType int
 
 const (
   NodeNum NodeType = iota + 1
   NodeAdd
   NodeMul
+  NodeAssign
+  NodeVar
 )
 
 func (n NodeType) String() string {
@@ -36,6 +49,10 @@ func (n NodeType) String() string {
     return "add"
   case NodeMul:
     return "mul"
+  case NodeAssign:
+    return "assign"
+  case NodeVar:
+    return "var"
   default:
     return "unknown"
   }
@@ -43,9 +60,10 @@ func (n NodeType) String() string {
 
 type Node struct {
   Type NodeType
-  Val  int
-  Lhs  *Node
-  Rhs  *Node
+  Val   int
+  Ident rune
+  Lhs   *Node
+  Rhs   *Node
 }
 
 func (n Node) String() string {
@@ -56,6 +74,10 @@ func (n Node) String() string {
     return fmt.Sprintf("add(%s, %s)", n.Lhs.String(), n.Rhs.String())
   case NodeMul:
     return fmt.Sprintf("mul(%s, %s)", n.Lhs.String(), n.Rhs.String())
+  case NodeAssign:
+    return fmt.Sprintf("assign(%s, %s)", n.Lhs.String(), n.Rhs.String())
+  case NodeVar:
+    return fmt.Sprintf("var(%c)", n.Ident)
   default:
     return fmt.Sprintf("unknown type: %d", n.Type)
   }
@@ -73,6 +95,13 @@ func NewNumNode(val int) *Node {
   return &Node{
     Type: NodeNum,
     Val:  val,
+  }
+}
+
+func NewVarNode(name rune) *Node {
+  return &Node{
+    Type:  NodeVar,
+    Ident: name,
   }
 }
 
@@ -105,6 +134,12 @@ func eval(node *Node) int {
     l := eval(node.Lhs)
     r := eval(node.Rhs)
     return l*r
+  case NodeAssign:
+    val := eval(node.Rhs)
+    vars.Set(node.Lhs.Ident, val)
+    return val
+  case NodeVar:
+    return vars.Get(node.Ident)
   default:
     panic(fmt.Sprintf("unknown type: %d", node.Type))
   }
@@ -116,6 +151,15 @@ func consume(c rune) bool {
     return true
   }
   return false
+}
+
+func consumeIdent() (rune, bool) {
+  c := codes[0]
+  if 'a' <= c && c <= 'z' {
+    codes = codes[1:]
+    return c, true
+  }
+  return '?', false
 }
 
 func expect(c rune) {
@@ -164,7 +208,16 @@ func stmt() *Node {
 }
 
 func expr() *Node {
-  return add()
+  return assign()
+}
+
+func assign() *Node {
+  node := add()
+  if consume('=') {
+    node = NewNode(NodeAssign, node, assign())
+  }
+
+  return node
 }
 
 func add() *Node {
@@ -203,6 +256,11 @@ func pri() *Node {
     node := expr()
     expect(')')
     return node
+  }
+
+  ident, ok := consumeIdent()
+  if ok {
+    return NewVarNode(ident)
   }
 
   return num()
