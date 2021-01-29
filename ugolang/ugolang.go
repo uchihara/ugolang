@@ -111,11 +111,7 @@ type TokenType int
 
 const (
 	TokenNum TokenType = iota + 1
-	TokenAdd
-	TokenMul
-	TokenParen1
-	TokenParen2
-	TokenAssign
+	TokenSign
 	TokenIdent
 	TokenEOL
 )
@@ -124,16 +120,8 @@ func (t TokenType) String() string {
 	switch t {
 	case TokenNum:
 		return "numToken"
-	case TokenAdd:
-		return "addToken"
-	case TokenMul:
-		return "mulToken"
-	case TokenParen1:
-		return "("
-	case TokenParen2:
-		return ")"
-	case TokenAssign:
-		return "="
+	case TokenSign:
+		return "signToken"
 	case TokenIdent:
 		return "identToken"
 	case TokenEOL:
@@ -146,6 +134,7 @@ func (t TokenType) String() string {
 type Token struct {
 	Type  TokenType
 	Num   int
+  Sign  rune
 	Ident rune
 }
 
@@ -153,16 +142,8 @@ func (t Token) String() string {
 	switch t.Type {
 	case TokenNum:
 		return fmt.Sprintf("num(%d)", t.Num)
-	case TokenAdd:
-		return "add"
-	case TokenMul:
-		return "mul"
-	case TokenParen1:
-		return "("
-	case TokenParen2:
-		return ")"
-	case TokenAssign:
-		return "="
+	case TokenSign:
+		return fmt.Sprintf("sign(%c)", t.Sign)
 	case TokenIdent:
 		return fmt.Sprintf("ident(%c)", t.Ident)
 	case TokenEOL:
@@ -182,6 +163,13 @@ func NewNumToken(num int) *Token {
 	return &Token{
 		Type: TokenNum,
 		Num:  num,
+	}
+}
+
+func NewSignToken(sign rune) *Token {
+	return &Token{
+		Type: TokenSign,
+		Sign: sign,
 	}
 }
 
@@ -233,28 +221,8 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		if c == '=' {
-			tokens = append(tokens, *NewToken(TokenAssign))
-			continue
-		}
-
-		if c == '+' {
-			tokens = append(tokens, *NewToken(TokenAdd))
-			continue
-		}
-
-		if c == '*' {
-			tokens = append(tokens, *NewToken(TokenMul))
-			continue
-		}
-
-		if c == '(' {
-			tokens = append(tokens, *NewToken(TokenParen1))
-			continue
-		}
-
-		if c == ')' {
-			tokens = append(tokens, *NewToken(TokenParen2))
+		if c == '=' || c == '+' || c == '*' || c == '(' || c == ')' {
+			tokens = append(tokens, *NewSignToken(rune(c)))
 			continue
 		}
 
@@ -297,6 +265,14 @@ func consume(tokenType TokenType) bool {
 	return false
 }
 
+func consumeSign(sign rune) bool {
+	if tokens[0].Type == TokenSign && tokens[0].Sign == sign {
+		tokens = tokens[1:]
+		return true
+	}
+	return false
+}
+
 func consumeIdent() (rune, bool) {
 	token := tokens[0]
 	if token.Type == TokenIdent {
@@ -309,6 +285,12 @@ func consumeIdent() (rune, bool) {
 func expect(tokenType TokenType) {
 	if !consume(tokenType) {
 		panic(fmt.Sprintf("expect %v but got %v", tokenType, tokens[0].Type))
+	}
+}
+
+func expectSign(sign rune) {
+	if !consumeSign(sign) {
+		panic(fmt.Sprintf("expect %v but got %v", sign, tokens[0]))
 	}
 }
 
@@ -357,7 +339,7 @@ func expr() *Node {
 
 func assign() *Node {
 	node := add()
-	if consume(TokenAssign) {
+	if consumeSign('=') {
 		node = NewNode(NodeAssign, node, assign())
 	}
 
@@ -369,7 +351,7 @@ func add() *Node {
 	node := mul()
 	dprintf("add lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consume(TokenAdd) {
+		if consumeSign('+') {
 			node = NewNode(NodeAdd, node, mul())
 			dprintf("add rhs: %v\n", node)
 		} else {
@@ -384,7 +366,7 @@ func mul() *Node {
 	node := pri()
 	dprintf("mul lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consume(TokenMul) {
+		if consumeSign('*') {
 			node = NewNode(NodeMul, node, pri())
 			dprintf("mul rhs: %v\n", node)
 		} else {
@@ -396,9 +378,9 @@ func mul() *Node {
 
 func pri() *Node {
 	dprintf("pri start\n")
-	if consume(TokenParen1) {
+	if consumeSign('(') {
 		node := expr()
-		expect(TokenParen2)
+		expectSign(')')
 		return node
 	}
 
