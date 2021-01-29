@@ -21,9 +21,10 @@ func main() {
 		return
 	}
 
-	ugolang.DumpTokens = dumpTokens
-	ugolang.DumpNodes = dumpNodes
+	ugo := ugolang.NewUgolang()
+	ugo.DumpTokens = dumpTokens
+	ugo.DumpNodes = dumpNodes
 	code := flag.Arg(0)
-	n := ugolang.Exec(code)
+	n := ugo.Exec(code)
 	fmt.Printf("%s=%d\n", code, n)
 }

@@ -7,8 +7,15 @@ import (
 	"strconv"
 )
 
-var DumpTokens bool
-var DumpNodes bool
+type Ugolang struct {
+	DumpTokens bool
+	DumpNodes  bool
+}
+
+func NewUgolang() *Ugolang {
+	return &Ugolang{
+	}
+}
 
 type stackType []int
 
@@ -215,13 +222,13 @@ func NewIdentToken(ident rune) *Token {
 
 var tokens []Token
 
-func Exec(code string) int {
+func (u *Ugolang) Exec(code string) int {
 	tokens = tokenize(code)
-	if DumpTokens {
+	if u.DumpTokens {
 		fmt.Printf("tokens: %v\n", tokens)
 	}
 	nodes := prog()
-	if DumpNodes {
+	if u.DumpNodes {
 		fmt.Printf("nodes: %v\n", nodes)
 	}
 	ret := 0

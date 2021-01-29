@@ -80,7 +80,8 @@ func TestUgolang(t *testing.T) {
     },
   }
   for _, tt := range tts {
-    actual := Exec(tt.code)
+    ugo := NewUgolang()
+    actual := ugo.Exec(tt.code)
     if actual != tt.want {
       t.Errorf("%s expect %d but got %d", tt.code, tt.want, actual)
     }
