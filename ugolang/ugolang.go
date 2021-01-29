@@ -100,7 +100,7 @@ func (n Node) String() string {
 	case NodeVar:
 		return fmt.Sprintf("var(%c)", n.Ident)
 	case NodeIf:
-		return fmt.Sprintf("if(%v, %v)", n.Cond, n.Then)
+		return fmt.Sprintf("if(%v, %v, %v)", n.Cond, n.Then, n.Else)
 	case NodeElse:
 		return fmt.Sprintf("else(%v)", n.Else)
 	default:
@@ -240,24 +240,34 @@ func (u *Ugolang) Exec(code string) int {
 	return ret
 }
 
-func matchKeyword(kw, code string, idx int) (int, bool) {
-		matchLen := len(kw) + 1
-		if idx + matchLen <= len(code) && code[idx:idx+matchLen] == kw + " " {
-			return len(kw), true
-		}
+func matchToken(token, code string, idx int) (int, bool) {
+	tokenLen := len(token)
+	if idx + tokenLen + 1 > len(code) {
 		return 0, false
+	}
+	if code[idx : idx+tokenLen] != token {
+		return 0, false
+	}
+	nextChar := code[idx+tokenLen]
+	if '0' <= nextChar && nextChar <= '9' ||
+		 'a' <= nextChar && nextChar <= 'z' ||
+		 'A' <= nextChar && nextChar <= 'Z' ||
+		 nextChar == '_' {
+		return 0, false
+	}
+	return len(token)-1, true
 }
 
 func tokenize(code string) []Token {
 	tokens := make([]Token, 0)
 	for i := 0; i < len(code); i++ {
-		if matchLen, matched := matchKeyword("if", code, i); matched {
+		if matchLen, matched := matchToken("if", code, i); matched {
 			tokens = append(tokens, *NewToken(TokenIf))
 			i += matchLen
 			continue
 		}
 
-		if matchLen, matched := matchKeyword("else", code, i); matched {
+		if matchLen, matched := matchToken("else", code, i); matched {
 			tokens = append(tokens, *NewToken(TokenElse))
 			i += matchLen
 			continue
@@ -324,7 +334,7 @@ func eval(node *Node) int {
 			return eval(node.Then)
 		} else {
 			if node.Else != nil {
-			  return eval(node.Else)
+				return eval(node.Else)
 			}
 		}
 		return 0 // FIXME

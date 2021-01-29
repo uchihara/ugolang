@@ -78,6 +78,10 @@ func TestUgolang(t *testing.T) {
       code: "a=0; if a { b=1; } else { b=2; } a+b;",
       want: 2,
     },
+    {
+      code: "a=0;if a{b=1;}else{b=2;}a+b;",
+      want: 2,
+    },
   }
   for _, tt := range tts {
     ugo := NewUgolang()
