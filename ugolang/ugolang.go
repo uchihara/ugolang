@@ -42,6 +42,7 @@ const (
 	NodeAssign
 	NodeVar
 	NodeIf
+	NodeElse
 )
 
 func (n NodeType) String() string {
@@ -58,6 +59,8 @@ func (n NodeType) String() string {
 		return "var"
 	case NodeIf:
 		return "if"
+	case NodeElse:
+		return "else"
 	default:
 		return "unknown"
 	}
@@ -71,6 +74,7 @@ type Node struct {
 	Rhs   *Node
 	Cond  *Node
 	Then  *Node
+	Else  *Node
 }
 
 func (n Node) String() string {
@@ -87,6 +91,8 @@ func (n Node) String() string {
 		return fmt.Sprintf("var(%c)", n.Ident)
 	case NodeIf:
 		return fmt.Sprintf("if(%v, %v)", n.Cond, n.Then)
+	case NodeElse:
+		return fmt.Sprintf("else(%v)", n.Else)
 	default:
 		return fmt.Sprintf("unknown type: %d", n.Type)
 	}
@@ -114,11 +120,12 @@ func NewVarNode(name rune) *Node {
 	}
 }
 
-func NewIfNode(condNode, thenNode *Node) *Node {
+func NewIfNode(condNode, thenNode, elseNode *Node) *Node {
 	return &Node{
 		Type: NodeIf,
 		Cond: condNode,
 		Then: thenNode,
+		Else: elseNode,
 	}
 }
 
@@ -129,6 +136,7 @@ const (
 	TokenSign
 	TokenIdent
 	TokenIf
+	TokenElse
 	TokenEOL
 )
 
@@ -166,6 +174,8 @@ func (t Token) String() string {
 		return fmt.Sprintf("ident(%c)", t.Ident)
 	case TokenIf:
 		return "if"
+	case TokenElse:
+		return "else"
 	case TokenEOL:
 		return ";"
 	default:
@@ -214,12 +224,26 @@ func Exec(code string) int {
 	return ret
 }
 
+func matchKeyword(kw, code string, idx int) (int, bool) {
+		matchLen := len(kw) + 1
+		if idx + matchLen <= len(code) && code[idx:idx+matchLen] == kw + " " {
+			return len(kw), true
+		}
+		return 0, false
+}
+
 func tokenize(code string) []Token {
 	tokens := make([]Token, 0)
 	for i := 0; i < len(code); i++ {
-		if i + 3 <= len(code) && code[i:i+3] == "if " {
-		tokens = append(tokens, *NewToken(TokenIf))
-			i += 2
+		if matchLen, matched := matchKeyword("if", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenIf))
+			i += matchLen
+			continue
+		}
+
+		if matchLen, matched := matchKeyword("else", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenElse))
+			i += matchLen
 			continue
 		}
 
@@ -282,6 +306,10 @@ func eval(node *Node) int {
 		cond := eval(node.Cond)
 		if cond != 0 {
 			return eval(node.Then)
+		} else {
+			if node.Else != nil {
+			  return eval(node.Else)
+			}
 		}
 		return 0 // FIXME
 	default:
@@ -290,6 +318,9 @@ func eval(node *Node) int {
 }
 
 func consume(tokenType TokenType) bool {
+	if len(tokens) == 0 {
+		return false
+	}
 	if tokenType == tokens[0].Type {
 		tokens = tokens[1:]
 		return true
@@ -298,6 +329,9 @@ func consume(tokenType TokenType) bool {
 }
 
 func consumeSign(sign rune) bool {
+	if len(tokens) == 0 {
+		return false
+	}
 	if tokens[0].Type == TokenSign && tokens[0].Sign == sign {
 		tokens = tokens[1:]
 		return true
@@ -306,6 +340,9 @@ func consumeSign(sign rune) bool {
 }
 
 func consumeIdent() (rune, bool) {
+	if len(tokens) == 0 {
+		return '?', false
+	}
 	token := tokens[0]
 	if token.Type == TokenIdent {
 		tokens = tokens[1:]
@@ -443,5 +480,11 @@ func if_() *Node {
 	expectSign('{')
 	thenNode := stmt()
 	expectSign('}')
-	return NewIfNode(condNode, thenNode)
+	var elseNode *Node
+	if consume(TokenElse) {
+		expectSign('{')
+		elseNode = stmt()
+		expectSign('}')
+	}
+	return NewIfNode(condNode, thenNode, elseNode)
 }
