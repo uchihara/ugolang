@@ -46,6 +46,22 @@ func TestUgolang(t *testing.T) {
       code: "(1+2)*3;",
       want: 9,
     },
+    {
+      code: "if 1 { 1; }",
+      want: 1,
+    },
+    {
+      code: "if 0 { 1; }",
+      want: 0,
+    },
+    {
+      code: "a=0;if a { 1; }",
+      want: 0,
+    },
+    {
+      code: "a=2;if a { 1; }",
+      want: 1,
+    },
   }
   for _, tt := range tts {
     actual := Exec(tt.code)

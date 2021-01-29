@@ -41,6 +41,7 @@ const (
 	NodeMul
 	NodeAssign
 	NodeVar
+	NodeIf
 )
 
 func (n NodeType) String() string {
@@ -55,6 +56,8 @@ func (n NodeType) String() string {
 		return "assign"
 	case NodeVar:
 		return "var"
+	case NodeIf:
+		return "if"
 	default:
 		return "unknown"
 	}
@@ -66,6 +69,8 @@ type Node struct {
 	Ident rune
 	Lhs   *Node
 	Rhs   *Node
+	Cond  *Node
+	Then  *Node
 }
 
 func (n Node) String() string {
@@ -80,6 +85,8 @@ func (n Node) String() string {
 		return fmt.Sprintf("assign(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeVar:
 		return fmt.Sprintf("var(%c)", n.Ident)
+	case NodeIf:
+		return fmt.Sprintf("if(%v, %v)", n.Cond, n.Then)
 	default:
 		return fmt.Sprintf("unknown type: %d", n.Type)
 	}
@@ -107,12 +114,21 @@ func NewVarNode(name rune) *Node {
 	}
 }
 
+func NewIfNode(condNode, thenNode *Node) *Node {
+	return &Node{
+		Type: NodeIf,
+		Cond: condNode,
+		Then: thenNode,
+	}
+}
+
 type TokenType int
 
 const (
 	TokenNum TokenType = iota + 1
 	TokenSign
 	TokenIdent
+	TokenIf
 	TokenEOL
 )
 
@@ -124,6 +140,8 @@ func (t TokenType) String() string {
 		return "signToken"
 	case TokenIdent:
 		return "identToken"
+	case TokenIf:
+		return "ifToken"
 	case TokenEOL:
 		return "eolToken"
 	default:
@@ -134,7 +152,7 @@ func (t TokenType) String() string {
 type Token struct {
 	Type  TokenType
 	Num   int
-  Sign  rune
+	Sign  rune
 	Ident rune
 }
 
@@ -146,6 +164,8 @@ func (t Token) String() string {
 		return fmt.Sprintf("sign(%c)", t.Sign)
 	case TokenIdent:
 		return fmt.Sprintf("ident(%c)", t.Ident)
+	case TokenIf:
+		return "if"
 	case TokenEOL:
 		return ";"
 	default:
@@ -197,6 +217,12 @@ func Exec(code string) int {
 func tokenize(code string) []Token {
 	tokens := make([]Token, 0)
 	for i := 0; i < len(code); i++ {
+		if i + 3 <= len(code) && code[i:i+3] == "if " {
+		tokens = append(tokens, *NewToken(TokenIf))
+			i += 2
+			continue
+		}
+
 		c := code[i]
 
 		if c == ' ' {
@@ -221,7 +247,7 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		if c == '=' || c == '+' || c == '*' || c == '(' || c == ')' {
+		if c == '=' || c == '+' || c == '*' || c == '(' || c == ')' || c == '{' || c == '}' {
 			tokens = append(tokens, *NewSignToken(rune(c)))
 			continue
 		}
@@ -252,6 +278,12 @@ func eval(node *Node) int {
 		return val
 	case NodeVar:
 		return vars.Get(node.Ident)
+	case NodeIf:
+		cond := eval(node.Cond)
+		if cond != 0 {
+			return eval(node.Then)
+		}
+		return 0 // FIXME
 	default:
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}
@@ -290,7 +322,7 @@ func expect(tokenType TokenType) {
 
 func expectSign(sign rune) {
 	if !consumeSign(sign) {
-		panic(fmt.Sprintf("expect %v but got %v", sign, tokens[0]))
+		panic(fmt.Sprintf("expect %c but got %v", sign, tokens[0]))
 	}
 }
 
@@ -328,6 +360,9 @@ func prog() []Node {
 }
 
 func stmt() *Node {
+	if consume(TokenIf) {
+		return if_()
+	}
 	node := expr()
 	expect(TokenEOL)
 	return node
@@ -400,4 +435,13 @@ func num() *Node {
 	}
 	tokens = tokens[1:]
 	return NewNumNode(token.Num)
+}
+
+func if_() *Node {
+	dprintf("if start\n")
+	condNode := expr()
+	expectSign('{')
+	thenNode := stmt()
+	expectSign('}')
+	return NewIfNode(condNode, thenNode)
 }
