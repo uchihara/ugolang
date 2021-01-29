@@ -7,6 +7,9 @@ import (
 	"strconv"
 )
 
+var DumpTokens bool
+var DumpNodes bool
+
 type stackType []int
 
 var stack stackType
@@ -214,7 +217,13 @@ var tokens []Token
 
 func Exec(code string) int {
 	tokens = tokenize(code)
+	if DumpTokens {
+		fmt.Printf("tokens: %v\n", tokens)
+	}
 	nodes := prog()
+	if DumpNodes {
+		fmt.Printf("nodes: %v\n", nodes)
+	}
 	ret := 0
 	for _, node := range nodes {
 		eval(&node)

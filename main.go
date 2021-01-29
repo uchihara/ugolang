@@ -1,14 +1,29 @@
 package main
 
 import (
-  "fmt"
-  "os"
+	"flag"
+	"fmt"
+	"os"
 
-  "github.com/uchihara/ugolang/ugolang"
+	"github.com/uchihara/ugolang/ugolang"
 )
 
 func main() {
-  code := os.Args[1]
-  n := ugolang.Exec(code)
-  fmt.Printf("%s=%d\n", code, n)
+	var dumpTokens bool
+	flag.BoolVar(&dumpTokens, "tokens", false, "dump tokens")
+	var dumpNodes bool
+	flag.BoolVar(&dumpNodes, "nodes", false, "dump nodes")
+	flag.Parse()
+
+	if flag.NArg() != 1 {
+		fmt.Printf("usage %s [options] <source>\n", os.Args[0])
+		flag.PrintDefaults()
+		return
+	}
+
+	ugolang.DumpTokens = dumpTokens
+	ugolang.DumpNodes = dumpNodes
+	code := flag.Arg(0)
+	n := ugolang.Exec(code)
+	fmt.Printf("%s=%d\n", code, n)
 }
