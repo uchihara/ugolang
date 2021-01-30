@@ -20,7 +20,27 @@ func matchToken(token, code string, idx int) (int, bool) {
 		nextChar == '_' {
 		return 0, false
 	}
-	return len(token) - 1, true
+	return len(token), true
+}
+
+func matchSign(sign, code string, idx int) (int, bool) {
+	signLen := len(sign)
+	if idx+signLen > len(code) {
+		return 0, false
+	}
+	if code[idx:idx+signLen] != sign {
+		return 0, false
+	}
+	return len(sign), true
+}
+
+func matchSigns(signs []string, code string, idx int) (int, bool) {
+	for _, sign := range signs {
+		if matchLen, matched := matchSign(sign, code, idx); matched {
+			return matchLen, matched
+		}
+	}
+	return 0, false
 }
 
 func tokenize(code string) []Token {
@@ -28,13 +48,13 @@ func tokenize(code string) []Token {
 	for i := 0; i < len(code); i++ {
 		if matchLen, matched := matchToken("if", code, i); matched {
 			tokens = append(tokens, *NewToken(TokenIf))
-			i += matchLen
+			i += (matchLen - 1)
 			continue
 		}
 
 		if matchLen, matched := matchToken("else", code, i); matched {
 			tokens = append(tokens, *NewToken(TokenElse))
-			i += matchLen
+			i += (matchLen - 1)
 			continue
 		}
 
@@ -62,8 +82,10 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		if c == '=' || c == '+' || c == '*' || c == '(' || c == ')' || c == '{' || c == '}' {
-			tokens = append(tokens, *NewSignToken(string(c)))
+		signs := []string{"=", "+", "*", "(", ")", "{", "}"}
+		if matchLen, matched := matchSigns(signs, code, i); matched {
+			tokens = append(tokens, *NewSignToken(code[i : i+matchLen]))
+			i += (matchLen - 1)
 			continue
 		}
 
