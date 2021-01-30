@@ -12,6 +12,8 @@ const (
 	NodeMul
 	NodeEq
 	NodeNe
+	NodeLt
+	NodeLe
 	NodeAssign
 	NodeVar
 	NodeIf
@@ -30,6 +32,10 @@ func (n NodeType) String() string {
 		return "eq"
 	case NodeNe:
 		return "ne"
+	case NodeLe:
+		return "le"
+	case NodeLt:
+		return "lt"
 	case NodeAssign:
 		return "assign"
 	case NodeVar:
@@ -66,6 +72,10 @@ func (n Node) String() string {
 		return fmt.Sprintf("eq(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeNe:
 		return fmt.Sprintf("ne(%s, %s)", n.Lhs.String(), n.Rhs.String())
+	case NodeLe:
+		return fmt.Sprintf("le(%s, %s)", n.Lhs.String(), n.Rhs.String())
+	case NodeLt:
+		return fmt.Sprintf("lt(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeAssign:
 		return fmt.Sprintf("assign(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeVar:

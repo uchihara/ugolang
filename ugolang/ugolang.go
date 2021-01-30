@@ -61,6 +61,22 @@ func eval(node *Node) int {
 		} else {
 			return 0
 		}
+	case NodeLe:
+		l := eval(node.Lhs)
+		r := eval(node.Rhs)
+		if l <= r {
+			return 1
+		} else {
+			return 0
+		}
+	case NodeLt:
+		l := eval(node.Lhs)
+		r := eval(node.Rhs)
+		if l < r {
+			return 1
+		} else {
+			return 0
+		}
 	case NodeAssign:
 		val := eval(node.Rhs)
 		vars.Set(node.Lhs.Ident, val)

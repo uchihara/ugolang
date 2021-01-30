@@ -98,6 +98,38 @@ func TestUgolang(t *testing.T) {
 			code: "a=0; if a == 1 { 2; } else { 3; }",
 			want: 3,
 		},
+		{
+			code: "if 0<=0 { 1; } else { 0; }",
+			want: 1,
+		},
+		{
+			code: "if 0<0 { 1; } else { 0; }",
+			want: 0,
+		},
+		{
+			code: "if 0>=0 { 1; } else { 0; }",
+			want: 1,
+		},
+		{
+			code: "if 0>0 { 1; } else { 0; }",
+			want: 0,
+		},
+		{
+			code: "if 0<=1 { 1; } else { 0; }",
+			want: 1,
+		},
+		{
+			code: "if 0<1 { 1; } else { 0; }",
+			want: 1,
+		},
+		{
+			code: "if 0>=1 { 1; } else { 0; }",
+			want: 0,
+		},
+		{
+			code: "if 0>1 { 1; } else { 0; }",
+			want: 0,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

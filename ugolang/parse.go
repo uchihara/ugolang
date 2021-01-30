@@ -82,12 +82,30 @@ func assign() *Node {
 }
 
 func eq() *Node {
-	node := add()
+	node := rel()
 	for len(tokens) > 0 {
 		if consumeSign("==") {
-			node = NewNode(NodeEq, node, add())
+			node = NewNode(NodeEq, node, rel())
 		} else if consumeSign("!=") {
-			node = NewNode(NodeNe, node, add())
+			node = NewNode(NodeNe, node, rel())
+		} else {
+			break
+		}
+	}
+	return node
+}
+
+func rel() *Node {
+	node := add()
+	for len(tokens) > 0 {
+		if consumeSign("<=") {
+			node = NewNode(NodeLe, node, rel())
+		} else if consumeSign("<") {
+			node = NewNode(NodeLt, node, rel())
+		} else if consumeSign(">=") {
+			node = NewNode(NodeLe, rel(), node)
+		} else if consumeSign(">") {
+			node = NewNode(NodeLt, rel(), node)
 		} else {
 			break
 		}
