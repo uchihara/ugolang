@@ -10,6 +10,8 @@ const (
 	NodeNum NodeType = iota + 1
 	NodeAdd
 	NodeMul
+	NodeEq
+	NodeNe
 	NodeAssign
 	NodeVar
 	NodeIf
@@ -24,6 +26,10 @@ func (n NodeType) String() string {
 		return "add"
 	case NodeMul:
 		return "mul"
+	case NodeEq:
+		return "eq"
+	case NodeNe:
+		return "ne"
 	case NodeAssign:
 		return "assign"
 	case NodeVar:
@@ -56,6 +62,10 @@ func (n Node) String() string {
 		return fmt.Sprintf("add(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeMul:
 		return fmt.Sprintf("mul(%s, %s)", n.Lhs.String(), n.Rhs.String())
+	case NodeEq:
+		return fmt.Sprintf("eq(%s, %s)", n.Lhs.String(), n.Rhs.String())
+	case NodeNe:
+		return fmt.Sprintf("ne(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeAssign:
 		return fmt.Sprintf("assign(%s, %s)", n.Lhs.String(), n.Rhs.String())
 	case NodeVar:

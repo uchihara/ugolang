@@ -10,8 +10,7 @@ type Ugolang struct {
 }
 
 func NewUgolang() *Ugolang {
-	return &Ugolang{
-	}
+	return &Ugolang{}
 }
 
 var tokens []Token
@@ -46,6 +45,22 @@ func eval(node *Node) int {
 		l := eval(node.Lhs)
 		r := eval(node.Rhs)
 		return l * r
+	case NodeEq:
+		l := eval(node.Lhs)
+		r := eval(node.Rhs)
+		if l == r {
+			return 1
+		} else {
+			return 0
+		}
+	case NodeNe:
+		l := eval(node.Lhs)
+		r := eval(node.Rhs)
+		if l != r {
+			return 1
+		} else {
+			return 0
+		}
 	case NodeAssign:
 		val := eval(node.Rhs)
 		vars.Set(node.Lhs.Ident, val)

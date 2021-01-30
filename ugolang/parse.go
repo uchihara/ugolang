@@ -73,11 +73,25 @@ func expr() *Node {
 }
 
 func assign() *Node {
-	node := add()
+	node := eq()
 	if consumeSign("=") {
 		node = NewNode(NodeAssign, node, assign())
 	}
 
+	return node
+}
+
+func eq() *Node {
+	node := add()
+	for len(tokens) > 0 {
+		if consumeSign("==") {
+			node = NewNode(NodeEq, node, add())
+		} else if consumeSign("!=") {
+			node = NewNode(NodeNe, node, add())
+		} else {
+			break
+		}
+	}
 	return node
 }
 
