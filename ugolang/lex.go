@@ -7,20 +7,20 @@ import (
 
 func matchToken(token, code string, idx int) (int, bool) {
 	tokenLen := len(token)
-	if idx + tokenLen + 1 > len(code) {
+	if idx+tokenLen+1 > len(code) {
 		return 0, false
 	}
-	if code[idx : idx+tokenLen] != token {
+	if code[idx:idx+tokenLen] != token {
 		return 0, false
 	}
 	nextChar := code[idx+tokenLen]
 	if '0' <= nextChar && nextChar <= '9' ||
-		 'a' <= nextChar && nextChar <= 'z' ||
-		 'A' <= nextChar && nextChar <= 'Z' ||
-		 nextChar == '_' {
+		'a' <= nextChar && nextChar <= 'z' ||
+		'A' <= nextChar && nextChar <= 'Z' ||
+		nextChar == '_' {
 		return 0, false
 	}
-	return len(token)-1, true
+	return len(token) - 1, true
 }
 
 func tokenize(code string) []Token {
@@ -63,7 +63,7 @@ func tokenize(code string) []Token {
 		}
 
 		if c == '=' || c == '+' || c == '*' || c == '(' || c == ')' || c == '{' || c == '}' {
-			tokens = append(tokens, *NewSignToken(rune(c)))
+			tokens = append(tokens, *NewSignToken(string(c)))
 			continue
 		}
 

@@ -15,7 +15,7 @@ func consume(tokenType TokenType) bool {
 	return false
 }
 
-func consumeSign(sign rune) bool {
+func consumeSign(sign string) bool {
 	if len(tokens) == 0 {
 		return false
 	}
@@ -44,9 +44,9 @@ func expect(tokenType TokenType) {
 	}
 }
 
-func expectSign(sign rune) {
+func expectSign(sign string) {
 	if !consumeSign(sign) {
-		panic(fmt.Sprintf("expect %c but got %v", sign, tokens[0]))
+		panic(fmt.Sprintf("expect %s but got %v", sign, tokens[0]))
 	}
 }
 
@@ -74,7 +74,7 @@ func expr() *Node {
 
 func assign() *Node {
 	node := add()
-	if consumeSign('=') {
+	if consumeSign("=") {
 		node = NewNode(NodeAssign, node, assign())
 	}
 
@@ -86,7 +86,7 @@ func add() *Node {
 	node := mul()
 	dprintf("add lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consumeSign('+') {
+		if consumeSign("+") {
 			node = NewNode(NodeAdd, node, mul())
 			dprintf("add rhs: %v\n", node)
 		} else {
@@ -101,7 +101,7 @@ func mul() *Node {
 	node := pri()
 	dprintf("mul lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consumeSign('*') {
+		if consumeSign("*") {
 			node = NewNode(NodeMul, node, pri())
 			dprintf("mul rhs: %v\n", node)
 		} else {
@@ -113,9 +113,9 @@ func mul() *Node {
 
 func pri() *Node {
 	dprintf("pri start\n")
-	if consumeSign('(') {
+	if consumeSign("(") {
 		node := expr()
-		expectSign(')')
+		expectSign(")")
 		return node
 	}
 
@@ -140,14 +140,14 @@ func num() *Node {
 func if_() *Node {
 	dprintf("if start\n")
 	condNode := expr()
-	expectSign('{')
+	expectSign("{")
 	thenNode := stmt()
-	expectSign('}')
+	expectSign("}")
 	var elseNode *Node
 	if consume(TokenElse) {
-		expectSign('{')
+		expectSign("{")
 		elseNode = stmt()
-		expectSign('}')
+		expectSign("}")
 	}
 	return NewIfNode(condNode, thenNode, elseNode)
 }

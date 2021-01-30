@@ -35,7 +35,7 @@ func (t TokenType) String() string {
 type Token struct {
 	Type  TokenType
 	Num   int
-	Sign  rune
+	Sign  string
 	Ident rune
 }
 
@@ -44,7 +44,7 @@ func (t Token) String() string {
 	case TokenNum:
 		return fmt.Sprintf("num(%d)", t.Num)
 	case TokenSign:
-		return fmt.Sprintf("sign(%c)", t.Sign)
+		return fmt.Sprintf("sign(%s)", t.Sign)
 	case TokenIdent:
 		return fmt.Sprintf("ident(%c)", t.Ident)
 	case TokenIf:
@@ -71,7 +71,7 @@ func NewNumToken(num int) *Token {
 	}
 }
 
-func NewSignToken(sign rune) *Token {
+func NewSignToken(sign string) *Token {
 	return &Token{
 		Type: TokenSign,
 		Sign: sign,
