@@ -4,19 +4,31 @@ import (
 	"fmt"
 )
 
+// NodeType dummy
 type NodeType int
 
 const (
+	// NodeNum dummy
 	NodeNum NodeType = iota + 1
+	// NodeAdd dummy
 	NodeAdd
+	// NodeMul dummy
 	NodeMul
+	// NodeEq dummy
 	NodeEq
+	// NodeNe dummy
 	NodeNe
+	// NodeLt dummy
 	NodeLt
+	// NodeLe dummy
 	NodeLe
+	// NodeAssign dummy
 	NodeAssign
+	// NodeVar dummy
 	NodeVar
+	// NodeIf dummy
 	NodeIf
+	// NodeElse dummy
 	NodeElse
 )
 
@@ -49,12 +61,13 @@ func (n NodeType) String() string {
 	}
 }
 
+// Node dummy
 type Node struct {
 	Type  NodeType
 	Val   int
 	Ident rune
-	Lhs   *Node
-	Rhs   *Node
+	LHS   *Node
+	RHS   *Node
 	Cond  *Node
 	Then  *Node
 	Else  *Node
@@ -65,19 +78,19 @@ func (n Node) String() string {
 	case NodeNum:
 		return fmt.Sprintf("num(%d)", n.Val)
 	case NodeAdd:
-		return fmt.Sprintf("add(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("add(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeMul:
-		return fmt.Sprintf("mul(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("mul(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeEq:
-		return fmt.Sprintf("eq(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("eq(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeNe:
-		return fmt.Sprintf("ne(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("ne(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeLe:
-		return fmt.Sprintf("le(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("le(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeLt:
-		return fmt.Sprintf("lt(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("lt(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeAssign:
-		return fmt.Sprintf("assign(%s, %s)", n.Lhs.String(), n.Rhs.String())
+		return fmt.Sprintf("assign(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeVar:
 		return fmt.Sprintf("var(%c)", n.Ident)
 	case NodeIf:
@@ -89,14 +102,16 @@ func (n Node) String() string {
 	}
 }
 
+// NewNode dummy
 func NewNode(typ NodeType, lhs, rhs *Node) *Node {
 	return &Node{
 		Type: typ,
-		Lhs:  lhs,
-		Rhs:  rhs,
+		LHS:  lhs,
+		RHS:  rhs,
 	}
 }
 
+// NewNumNode dummy
 func NewNumNode(val int) *Node {
 	return &Node{
 		Type: NodeNum,
@@ -104,6 +119,7 @@ func NewNumNode(val int) *Node {
 	}
 }
 
+// NewVarNode dummy
 func NewVarNode(name rune) *Node {
 	return &Node{
 		Type:  NodeVar,
@@ -111,6 +127,7 @@ func NewVarNode(name rune) *Node {
 	}
 }
 
+// NewIfNode dummy
 func NewIfNode(condNode, thenNode, elseNode *Node) *Node {
 	return &Node{
 		Type: NodeIf,

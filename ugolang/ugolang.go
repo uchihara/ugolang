@@ -4,17 +4,20 @@ import (
 	"fmt"
 )
 
+// Ugolang dummy
 type Ugolang struct {
 	DumpTokens bool
 	DumpNodes  bool
 }
 
+// NewUgolang dummy
 func NewUgolang() *Ugolang {
 	return &Ugolang{}
 }
 
 var tokens []Token
 
+// Exec dummy
 func (u *Ugolang) Exec(code string) int {
 	tokens = tokenize(code)
 	if u.DumpTokens {
@@ -38,48 +41,44 @@ func eval(node *Node) int {
 	case NodeNum:
 		return node.Val
 	case NodeAdd:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		return l + r
 	case NodeMul:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		return l * r
 	case NodeEq:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		if l == r {
 			return 1
-		} else {
-			return 0
 		}
+		return 0
 	case NodeNe:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		if l != r {
 			return 1
-		} else {
-			return 0
 		}
+		return 0
 	case NodeLe:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		if l <= r {
 			return 1
-		} else {
-			return 0
 		}
+		return 0
 	case NodeLt:
-		l := eval(node.Lhs)
-		r := eval(node.Rhs)
+		l := eval(node.LHS)
+		r := eval(node.RHS)
 		if l < r {
 			return 1
-		} else {
-			return 0
 		}
+		return 0
 	case NodeAssign:
-		val := eval(node.Rhs)
-		vars.Set(node.Lhs.Ident, val)
+		val := eval(node.RHS)
+		vars.Set(node.LHS.Ident, val)
 		return val
 	case NodeVar:
 		return vars.Get(node.Ident)
@@ -87,10 +86,9 @@ func eval(node *Node) int {
 		cond := eval(node.Cond)
 		if cond != 0 {
 			return eval(node.Then)
-		} else {
-			if node.Else != nil {
-				return eval(node.Else)
-			}
+		}
+		if node.Else != nil {
+			return eval(node.Else)
 		}
 		return 0 // FIXME
 	default:

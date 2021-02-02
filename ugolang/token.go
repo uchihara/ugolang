@@ -4,14 +4,21 @@ import (
 	"fmt"
 )
 
+// TokenType dummmy
 type TokenType int
 
 const (
+	// TokenNum dummmy
 	TokenNum TokenType = iota + 1
+	// TokenSign dummmy
 	TokenSign
+	// TokenIdent dummmy
 	TokenIdent
+	// TokenIf dummmy
 	TokenIf
+	// TokenElse dummmy
 	TokenElse
+	// TokenEOL dummmy
 	TokenEOL
 )
 
@@ -32,6 +39,7 @@ func (t TokenType) String() string {
 	}
 }
 
+// Token dummy
 type Token struct {
 	Type  TokenType
 	Num   int
@@ -58,12 +66,14 @@ func (t Token) String() string {
 	}
 }
 
+// NewToken dummy
 func NewToken(typ TokenType) *Token {
 	return &Token{
 		Type: typ,
 	}
 }
 
+// NewNumToken dummy
 func NewNumToken(num int) *Token {
 	return &Token{
 		Type: TokenNum,
@@ -71,6 +81,7 @@ func NewNumToken(num int) *Token {
 	}
 }
 
+// NewSignToken dummy
 func NewSignToken(sign string) *Token {
 	return &Token{
 		Type: TokenSign,
@@ -78,6 +89,7 @@ func NewSignToken(sign string) *Token {
 	}
 }
 
+// NewIdentToken dummy
 func NewIdentToken(ident rune) *Token {
 	return &Token{
 		Type:  TokenIdent,
