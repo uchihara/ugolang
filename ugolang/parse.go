@@ -63,6 +63,9 @@ func stmt() *Node {
 	if consume(TokenIf) {
 		return if_()
 	}
+	if consume(TokenWhile) {
+		return while_()
+	}
 	node := expr()
 	expect(TokenEOL)
 	return node
@@ -182,4 +185,13 @@ func if_() *Node {
 		expectSign("}")
 	}
 	return NewIfNode(condNode, thenNode, elseNode)
+}
+
+func while_() *Node {
+	dprintf("while start\n")
+	condNode := expr()
+	expectSign("{")
+	bodyNode := stmt()
+	expectSign("}")
+	return NewWhileNode(condNode, bodyNode)
 }

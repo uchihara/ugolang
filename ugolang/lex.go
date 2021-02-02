@@ -58,6 +58,12 @@ func tokenize(code string) []Token {
 			continue
 		}
 
+		if matchLen, matched := matchToken("while", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenWhile))
+			i += (matchLen - 1)
+			continue
+		}
+
 		c := code[i]
 
 		if c == ' ' {

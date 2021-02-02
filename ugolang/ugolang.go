@@ -91,6 +91,12 @@ func eval(node *Node) int {
 			return eval(node.Else)
 		}
 		return 0 // FIXME
+	case NodeWhile:
+		r := 0
+		for eval(node.Cond) != 0 {
+			r = eval(node.Body)
+		}
+		return r
 	default:
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}

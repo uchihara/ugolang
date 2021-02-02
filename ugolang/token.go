@@ -18,6 +18,8 @@ const (
 	TokenIf
 	// TokenElse dummmy
 	TokenElse
+	// TokenWhile dummmy
+	TokenWhile
 	// TokenEOL dummmy
 	TokenEOL
 )
@@ -32,6 +34,8 @@ func (t TokenType) String() string {
 		return "identToken"
 	case TokenIf:
 		return "ifToken"
+	case TokenWhile:
+		return "whileToken"
 	case TokenEOL:
 		return "eolToken"
 	default:
@@ -59,6 +63,8 @@ func (t Token) String() string {
 		return "if"
 	case TokenElse:
 		return "else"
+	case TokenWhile:
+		return "while"
 	case TokenEOL:
 		return ";"
 	default:

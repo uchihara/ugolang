@@ -30,6 +30,8 @@ const (
 	NodeIf
 	// NodeElse dummy
 	NodeElse
+	// NodeWhile dummy
+	NodeWhile
 )
 
 func (n NodeType) String() string {
@@ -56,6 +58,8 @@ func (n NodeType) String() string {
 		return "if"
 	case NodeElse:
 		return "else"
+	case NodeWhile:
+		return "while"
 	default:
 		return "unknown"
 	}
@@ -71,6 +75,7 @@ type Node struct {
 	Cond  *Node
 	Then  *Node
 	Else  *Node
+	Body  *Node
 }
 
 func (n Node) String() string {
@@ -97,6 +102,8 @@ func (n Node) String() string {
 		return fmt.Sprintf("if(%v, %v, %v)", n.Cond, n.Then, n.Else)
 	case NodeElse:
 		return fmt.Sprintf("else(%v)", n.Else)
+	case NodeWhile:
+		return fmt.Sprintf("while(%v, %v)", n.Cond, n.Body)
 	default:
 		return fmt.Sprintf("unknown type: %d", n.Type)
 	}
@@ -134,5 +141,14 @@ func NewIfNode(condNode, thenNode, elseNode *Node) *Node {
 		Cond: condNode,
 		Then: thenNode,
 		Else: elseNode,
+	}
+}
+
+// NewWhileNode dummy
+func NewWhileNode(condNode, bodyNode *Node) *Node {
+	return &Node{
+		Type: NodeWhile,
+		Cond: condNode,
+		Body: bodyNode,
 	}
 }
