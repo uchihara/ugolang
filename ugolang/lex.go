@@ -80,16 +80,14 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		if '0' <= c && c <= '9' {
-			var j int = i + 1
-			for ; '0' <= code[j] && code[j] <= '9' && j < len(code); j++ {
-			}
-			numStr := code[i:j]
+		if matchLen, matched := matchPattern("^[0-9]+", code, i); matched {
+			numStr := code[i : i+matchLen]
 			num, err := strconv.ParseInt(numStr, 10, 64)
 			if err != nil {
 				panic(fmt.Sprintf("invalid num format: %s", numStr))
 			}
 			tokens = append(tokens, *NewNumToken(int(num)))
+			i += (matchLen - 1)
 			continue
 		}
 

@@ -138,6 +138,14 @@ func TestUgolang(t *testing.T) {
 			code: "aaa=1;b_=2;c123=3;aaa+b_+c123;",
 			want: 6,
 		},
+		{
+			code: "123;",
+			want: 123,
+		},
+		{
+			code: "(123+456)*2;",
+			want: 1158,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
