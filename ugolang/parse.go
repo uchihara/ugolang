@@ -26,16 +26,16 @@ func consumeSign(sign string) bool {
 	return false
 }
 
-func consumeIdent() (rune, bool) {
+func consumeIdent() (string, bool) {
 	if len(tokens) == 0 {
-		return '?', false
+		return "", false
 	}
 	token := tokens[0]
 	if token.Type == TokenIdent {
 		tokens = tokens[1:]
 		return token.Ident, true
 	}
-	return '?', false
+	return "", false
 }
 
 func expect(tokenType TokenType) {

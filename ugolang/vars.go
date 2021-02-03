@@ -1,13 +1,13 @@
 package ugolang
 
-type varsType map[rune]int
+type varsType map[string]int
 
-var vars varsType = map[rune]int{}
+var vars varsType = map[string]int{}
 
-func (v varsType) Get(name rune) int {
+func (v varsType) Get(name string) int {
 	return v[name]
 }
 
-func (v varsType) Set(name rune, val int) {
+func (v varsType) Set(name string, val int) {
 	v[name] = val
 }

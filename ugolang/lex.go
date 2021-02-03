@@ -2,6 +2,7 @@ package ugolang
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 )
 
@@ -41,6 +42,15 @@ func matchSigns(signs []string, code string, idx int) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+func matchPattern(pattern, code string, idx int) (int, bool) {
+	re := regexp.MustCompile(pattern)
+	loc := re.FindStringIndex(code[idx:len(code)])
+	if len(loc) != 2 {
+		return 0, false
+	}
+	return loc[1] - loc[0], true
 }
 
 func tokenize(code string) []Token {
@@ -83,8 +93,9 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		if 'a' <= c && c <= 'z' {
-			tokens = append(tokens, *NewIdentToken(rune(c)))
+		if matchLen, matched := matchPattern("^[A-Za-z0-9_]+", code, i); matched {
+			tokens = append(tokens, *NewIdentToken(code[i : i+matchLen]))
+			i += (matchLen - 1)
 			continue
 		}
 

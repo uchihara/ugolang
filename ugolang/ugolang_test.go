@@ -134,6 +134,10 @@ func TestUgolang(t *testing.T) {
 			code: "a=0; while a<2 { a=a+1; } a+1;",
 			want: 3,
 		},
+		{
+			code: "aaa=1;b_=2;c123=3;aaa+b_+c123;",
+			want: 6,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

@@ -69,7 +69,7 @@ func (n NodeType) String() string {
 type Node struct {
 	Type  NodeType
 	Val   int
-	Ident rune
+	Ident string
 	LHS   *Node
 	RHS   *Node
 	Cond  *Node
@@ -97,7 +97,7 @@ func (n Node) String() string {
 	case NodeAssign:
 		return fmt.Sprintf("assign(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeVar:
-		return fmt.Sprintf("var(%c)", n.Ident)
+		return fmt.Sprintf("var(%s)", n.Ident)
 	case NodeIf:
 		return fmt.Sprintf("if(%v, %v, %v)", n.Cond, n.Then, n.Else)
 	case NodeElse:
@@ -127,7 +127,7 @@ func NewNumNode(val int) *Node {
 }
 
 // NewVarNode dummy
-func NewVarNode(name rune) *Node {
+func NewVarNode(name string) *Node {
 	return &Node{
 		Type:  NodeVar,
 		Ident: name,
