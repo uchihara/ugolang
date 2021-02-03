@@ -1,4 +1,4 @@
 run:
-		go run main.go '1+2*3;'
+		go run main.go 'func main() { 1+2*3; }'
 test:
 	go test ugolang/*.go

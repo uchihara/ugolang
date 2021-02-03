@@ -40,23 +40,53 @@ func consumeIdent() (string, bool) {
 
 func expect(tokenType TokenType) {
 	if !consume(tokenType) {
-		panic(fmt.Sprintf("expect %v but got %v", tokenType, tokens[0].Type))
+		panic(fmt.Sprintf("%v expect %v but got %v", caller(), tokenType, tokens[0].Type))
 	}
 }
 
 func expectSign(sign string) {
 	if !consumeSign(sign) {
-		panic(fmt.Sprintf("expect %s but got %v", sign, tokens[0]))
+		panic(fmt.Sprintf("%v expect %s but got %v", caller(), sign, tokens[0]))
 	}
+}
+
+func expectIdent() string {
+	ident, ok := consumeIdent()
+	if !ok {
+		panic(fmt.Sprintf("%v expect ident but got %v", caller(), tokens[0]))
+	}
+	return ident
 }
 
 func prog() []Node {
 	nodes := make([]Node, 0)
 	for len(tokens) > 0 {
-		node := stmt()
+		node := func_()
 		nodes = append(nodes, *node)
 	}
 	return nodes
+}
+
+func func_() *Node {
+	expect(TokenFunc)
+	ident := expectIdent()
+	expectSign("(")
+	expectSign(")")
+	node := NewFuncNode(ident, block())
+	return node
+}
+
+func block() *Node {
+	node := NewBlockNode()
+	expectSign("{")
+	for len(tokens) > 0 {
+		node.Statements = append(node.Statements, stmt())
+		if consumeSign("}") {
+			return node
+		}
+	}
+	expectSign("}")
+	return node
 }
 
 func stmt() *Node {
@@ -148,6 +178,13 @@ func mul() *Node {
 
 func pri() *Node {
 	dprintf("pri start\n")
+	if consume(TokenCall) {
+		ident := expectIdent()
+		expectSign("(")
+		expectSign(")")
+		return NewCallNode(ident)
+	}
+
 	if consumeSign("(") {
 		node := expr()
 		expectSign(")")
@@ -166,7 +203,7 @@ func num() *Node {
 	dprintf("num start\n")
 	token := tokens[0]
 	if token.Type != TokenNum {
-		panic(fmt.Sprintf("expect num but got %v", token))
+		panic(fmt.Sprintf("%v expect num but got %v", caller(), token))
 	}
 	tokens = tokens[1:]
 	return NewNumNode(token.Num)
@@ -175,14 +212,10 @@ func num() *Node {
 func if_() *Node {
 	dprintf("if start\n")
 	condNode := expr()
-	expectSign("{")
-	thenNode := stmt()
-	expectSign("}")
+	thenNode := block()
 	var elseNode *Node
 	if consume(TokenElse) {
-		expectSign("{")
-		elseNode = stmt()
-		expectSign("}")
+		elseNode = block()
 	}
 	return NewIfNode(condNode, thenNode, elseNode)
 }
@@ -190,8 +223,6 @@ func if_() *Node {
 func while_() *Node {
 	dprintf("while start\n")
 	condNode := expr()
-	expectSign("{")
-	bodyNode := stmt()
-	expectSign("}")
+	bodyNode := block()
 	return NewWhileNode(condNode, bodyNode)
 }

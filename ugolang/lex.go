@@ -74,6 +74,18 @@ func tokenize(code string) []Token {
 			continue
 		}
 
+		if matchLen, matched := matchToken("func", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenFunc))
+			i += (matchLen - 1)
+			continue
+		}
+
+		if matchLen, matched := matchToken("call", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenCall))
+			i += (matchLen - 1)
+			continue
+		}
+
 		c := code[i]
 
 		if c == ' ' {

@@ -32,6 +32,12 @@ const (
 	NodeElse
 	// NodeWhile dummy
 	NodeWhile
+	// NodeFunc dummy
+	NodeFunc
+	// NodeCall dummy
+	NodeCall
+	// NodeBlock dummy
+	NodeBlock
 )
 
 func (n NodeType) String() string {
@@ -60,6 +66,12 @@ func (n NodeType) String() string {
 		return "else"
 	case NodeWhile:
 		return "while"
+	case NodeFunc:
+		return "func"
+	case NodeCall:
+		return "call"
+	case NodeBlock:
+		return "block"
 	default:
 		return "unknown"
 	}
@@ -67,15 +79,16 @@ func (n NodeType) String() string {
 
 // Node dummy
 type Node struct {
-	Type  NodeType
-	Val   int
-	Ident string
-	LHS   *Node
-	RHS   *Node
-	Cond  *Node
-	Then  *Node
-	Else  *Node
-	Body  *Node
+	Type       NodeType
+	Val        int
+	Ident      string
+	LHS        *Node
+	RHS        *Node
+	Cond       *Node
+	Then       *Node
+	Else       *Node
+	Body       *Node
+	Statements []*Node
 }
 
 func (n Node) String() string {
@@ -104,6 +117,19 @@ func (n Node) String() string {
 		return fmt.Sprintf("else(%v)", n.Else)
 	case NodeWhile:
 		return fmt.Sprintf("while(%v, %v)", n.Cond, n.Body)
+	case NodeFunc:
+		return fmt.Sprintf("func(%s, %v)", n.Ident, n.Body)
+	case NodeCall:
+		return fmt.Sprintf("call(%s)", n.Ident)
+	case NodeBlock:
+		s := ""
+		for _, stmt := range n.Statements {
+			if len(s) != 0 {
+				s += ", "
+			}
+			s += stmt.String()
+		}
+		return fmt.Sprintf("block(%s)", s)
 	default:
 		return fmt.Sprintf("unknown type: %d", n.Type)
 	}
@@ -150,5 +176,29 @@ func NewWhileNode(condNode, bodyNode *Node) *Node {
 		Type: NodeWhile,
 		Cond: condNode,
 		Body: bodyNode,
+	}
+}
+
+// NewFuncNode dummy
+func NewFuncNode(name string, bodyNode *Node) *Node {
+	return &Node{
+		Type:  NodeFunc,
+		Ident: name,
+		Body:  bodyNode,
+	}
+}
+
+// NewCallNode dummy
+func NewCallNode(name string) *Node {
+	return &Node{
+		Type:  NodeCall,
+		Ident: name,
+	}
+}
+
+// NewBlockNode dummy
+func NewBlockNode() *Node {
+	return &Node{
+		Type: NodeBlock,
 	}
 }

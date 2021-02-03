@@ -24,6 +24,7 @@ func (u *Ugolang) Exec(code string) int {
 		fmt.Printf("tokens: %v\n", tokens)
 	}
 	nodes := prog()
+	nodes = append(nodes, *NewCallNode("main"))
 	if u.DumpNodes {
 		fmt.Printf("nodes: %v\n", nodes)
 	}
@@ -33,6 +34,7 @@ func (u *Ugolang) Exec(code string) int {
 		dprintf("node=%v\n", node)
 		ret = eval(&node)
 	}
+
 	return ret
 }
 
@@ -97,6 +99,23 @@ func eval(node *Node) int {
 			r = eval(node.Body)
 		}
 		return r
+	case NodeFunc:
+		funcName := node.Ident
+		funcs.Define(funcName, node.Body)
+		return 0
+	case NodeCall:
+		funcName := node.Ident
+		if !funcs.Defined(funcName) {
+			panic(fmt.Sprintf("call %s but is not defined", funcName))
+		}
+		body := funcs[funcName]
+		return eval(body)
+	case NodeBlock:
+		ret := 0
+		for _, stmt := range node.Statements {
+			ret = eval(stmt)
+		}
+		return ret
 	default:
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}
