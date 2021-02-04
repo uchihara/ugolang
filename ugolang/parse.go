@@ -90,6 +90,11 @@ func block() *Node {
 }
 
 func stmt() *Node {
+	if consume(TokenReturn) {
+		node := NewReturnNode(expr())
+		expect(TokenEOL)
+		return node
+	}
 	if consume(TokenIf) {
 		return ifStmt()
 	}

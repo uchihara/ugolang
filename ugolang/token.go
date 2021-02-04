@@ -24,6 +24,8 @@ const (
 	TokenFunc
 	// TokenCall dummy
 	TokenCall
+	// TokenReturn dummy
+	TokenReturn
 	// TokenEOL dummmy
 	TokenEOL
 )
@@ -44,6 +46,8 @@ func (t TokenType) String() string {
 		return "funcToken"
 	case TokenCall:
 		return "callToken"
+	case TokenReturn:
+		return "returnToken"
 	case TokenEOL:
 		return "eolToken"
 	default:
@@ -77,6 +81,8 @@ func (t Token) String() string {
 		return "func"
 	case TokenCall:
 		return "call"
+	case TokenReturn:
+		return "return"
 	case TokenEOL:
 		return ";"
 	default:

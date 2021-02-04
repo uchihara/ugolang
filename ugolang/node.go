@@ -36,6 +36,8 @@ const (
 	NodeFunc
 	// NodeCall dummy
 	NodeCall
+	// NodeReturn dummy
+	NodeReturn
 	// NodeBlock dummy
 	NodeBlock
 )
@@ -70,6 +72,8 @@ func (n NodeType) String() string {
 		return "func"
 	case NodeCall:
 		return "call"
+	case NodeReturn:
+		return "return"
 	case NodeBlock:
 		return "block"
 	default:
@@ -88,6 +92,7 @@ type Node struct {
 	Then       *Node
 	Else       *Node
 	Body       *Node
+	Expr       *Node
 	Statements []*Node
 }
 
@@ -121,6 +126,8 @@ func (n Node) String() string {
 		return fmt.Sprintf("func(%s, %v)", n.Ident, n.Body)
 	case NodeCall:
 		return fmt.Sprintf("call(%s)", n.Ident)
+	case NodeReturn:
+		return fmt.Sprintf("return(%v)", n.Expr)
 	case NodeBlock:
 		s := ""
 		for _, stmt := range n.Statements {
@@ -193,6 +200,14 @@ func NewCallNode(name string) *Node {
 	return &Node{
 		Type:  NodeCall,
 		Ident: name,
+	}
+}
+
+// NewReturnNode dummy
+func NewReturnNode(expr *Node) *Node {
+	return &Node{
+		Type: NodeReturn,
+		Expr: expr,
 	}
 }
 

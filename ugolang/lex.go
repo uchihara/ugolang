@@ -86,6 +86,12 @@ func tokenize(code string) []Token {
 			continue
 		}
 
+		if matchLen, matched := matchToken("return", code, i); matched {
+			tokens = append(tokens, *NewToken(TokenReturn))
+			i += (matchLen - 1)
+			continue
+		}
+
 		c := code[i]
 
 		if c == ' ' {
