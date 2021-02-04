@@ -91,10 +91,10 @@ func block() *Node {
 
 func stmt() *Node {
 	if consume(TokenIf) {
-		return if_()
+		return ifStmt()
 	}
 	if consume(TokenWhile) {
-		return while_()
+		return whileStmt()
 	}
 	node := expr()
 	expect(TokenEOL)
@@ -209,7 +209,7 @@ func num() *Node {
 	return NewNumNode(token.Num)
 }
 
-func if_() *Node {
+func ifStmt() *Node {
 	dprintf("if start\n")
 	condNode := expr()
 	thenNode := block()
@@ -220,7 +220,7 @@ func if_() *Node {
 	return NewIfNode(condNode, thenNode, elseNode)
 }
 
-func while_() *Node {
+func whileStmt() *Node {
 	dprintf("while start\n")
 	condNode := expr()
 	bodyNode := block()
