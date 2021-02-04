@@ -84,10 +84,10 @@ func eval(node *Node) (int, bool) {
 		return 0, false
 	case NodeAssign:
 		val, _ := eval(node.RHS)
-		vars.Set(node.LHS.Ident, val)
+		funcStack.peek().locals.Set(node.LHS.Ident, val)
 		return val, false
 	case NodeVar:
-		return vars.Get(node.Ident), false
+		return funcStack.peek().locals.Get(node.Ident), false
 	case NodeIf:
 		cond, _ := eval(node.Cond)
 		if cond != 0 {

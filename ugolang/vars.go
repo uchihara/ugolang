@@ -2,8 +2,6 @@ package ugolang
 
 type varsType map[string]int
 
-var vars varsType = map[string]int{}
-
 func (v varsType) Get(name string) int {
 	return v[name]
 }
