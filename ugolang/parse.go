@@ -61,13 +61,13 @@ func expectIdent() string {
 func prog() []Node {
 	nodes := make([]Node, 0)
 	for len(tokens) > 0 {
-		node := func_()
+		node := funcStmt()
 		nodes = append(nodes, *node)
 	}
 	return nodes
 }
 
-func func_() *Node {
+func funcStmt() *Node {
 	expect(TokenFunc)
 	ident := expectIdent()
 	expectSign("(")
