@@ -170,6 +170,14 @@ func TestUgolang(t *testing.T) {
 			code: "func foo() { return a; } func main() { a=1; call foo(); }",
 			want: 0,
 		},
+		{
+			code: "func foo(a) { a; } func main() { call foo(1); }",
+			want: 1,
+		},
+		{
+			code: "func foo(a, b) { a+b; } func main() { call foo(1, 2); }",
+			want: 3,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

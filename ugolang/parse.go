@@ -70,10 +70,39 @@ func prog() []Node {
 func funcStmt() *Node {
 	expect(TokenFunc)
 	ident := expectIdent()
-	expectSign("(")
-	expectSign(")")
-	node := NewFuncNode(ident, block())
+	args := args()
+	node := NewFuncNode(ident, args, block())
 	return node
+}
+
+func args() []string {
+	expectSign("(")
+	args := make([]string, 0)
+	for len(tokens) > 0 {
+		if consumeSign(")") {
+			break
+		}
+		if len(args) != 0 {
+			expectSign(",")
+		}
+		args = append(args, expectIdent())
+	}
+	return args
+}
+
+func params() []*Node {
+	expectSign("(")
+	params := make([]*Node, 0)
+	for len(tokens) > 0 {
+		if consumeSign(")") {
+			break
+		}
+		if len(params) != 0 {
+			expectSign(",")
+		}
+		params = append(params, expr())
+	}
+	return params
 }
 
 func block() *Node {
@@ -185,9 +214,8 @@ func pri() *Node {
 	dprintf("pri start\n")
 	if consume(TokenCall) {
 		ident := expectIdent()
-		expectSign("(")
-		expectSign(")")
-		return NewCallNode(ident)
+		prms := params()
+		return NewCallNode(ident, prms)
 	}
 
 	if consumeSign("(") {

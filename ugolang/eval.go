@@ -75,15 +75,21 @@ func eval(node *Node) (int, bool) {
 		return r, false
 	case NodeFunc:
 		funcName := node.Ident
-		funcs.Define(funcName, node.Body)
+		funcs.Define(funcName, node.Args, node.Body)
 		return 0, false
 	case NodeCall:
 		funcName := node.Ident
-		if !funcs.Defined(funcName) {
+		fn, ok := funcs.Lookup(funcName)
+		if !ok {
 			panic(fmt.Sprintf("call %s but is not defined", funcName))
 		}
 		funcStack.push(funcName)
-		body := funcs[funcName]
+		fp := funcStack.peek()
+		for i, param := range node.Params {
+			argName := fn.Args[i]
+			fp.locals[argName], _ = eval(param)
+		}
+		body := fn.Body
 		r, _ := eval(body)
 		funcStack.pop()
 		return r, false

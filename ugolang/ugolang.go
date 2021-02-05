@@ -24,7 +24,7 @@ func (u *Ugolang) Exec(code string) int {
 		fmt.Printf("tokens: %v\n", tokens)
 	}
 	nodes := prog()
-	nodes = append(nodes, *NewCallNode("main"))
+	nodes = append(nodes, *NewCallNode("main", []*Node{}))
 	if u.DumpNodes {
 		fmt.Printf("nodes: %v\n", nodes)
 	}

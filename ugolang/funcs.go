@@ -1,11 +1,27 @@
 package ugolang
 
-type funcMap map[string]*Node
+// FuncType dummy
+type FuncType struct {
+	Name string
+	Args []string
+	Body *Node
+}
+
+type funcMap map[string]FuncType
 
 var funcs funcMap = funcMap{}
 
-func (f funcMap) Define(name string, body *Node) {
-	f[name] = body
+func (f funcMap) Define(name string, args []string, body *Node) {
+	f[name] = FuncType{
+		Name: name,
+		Args: args,
+		Body: body,
+	}
+}
+
+func (f funcMap) Lookup(name string) (FuncType, bool) {
+	fn, ok := f[name]
+	return fn, ok
 }
 
 func (f funcMap) Defined(name string) bool {

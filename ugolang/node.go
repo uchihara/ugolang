@@ -94,6 +94,8 @@ type Node struct {
 	Body       *Node
 	Expr       *Node
 	Statements []*Node
+	Args       []string
+	Params     []*Node
 }
 
 func (n Node) String() string {
@@ -123,9 +125,9 @@ func (n Node) String() string {
 	case NodeWhile:
 		return fmt.Sprintf("while(%v, %v)", n.Cond, n.Body)
 	case NodeFunc:
-		return fmt.Sprintf("func(%s, %v)", n.Ident, n.Body)
+		return fmt.Sprintf("func(%s, %v, %v)", n.Ident, n.Args, n.Body)
 	case NodeCall:
-		return fmt.Sprintf("call(%s)", n.Ident)
+		return fmt.Sprintf("call(%s, %v)", n.Ident, n.Params)
 	case NodeReturn:
 		return fmt.Sprintf("return(%v)", n.Expr)
 	case NodeBlock:
@@ -187,19 +189,21 @@ func NewWhileNode(condNode, bodyNode *Node) *Node {
 }
 
 // NewFuncNode dummy
-func NewFuncNode(name string, bodyNode *Node) *Node {
+func NewFuncNode(name string, args []string, bodyNode *Node) *Node {
 	return &Node{
 		Type:  NodeFunc,
 		Ident: name,
+		Args:  args,
 		Body:  bodyNode,
 	}
 }
 
 // NewCallNode dummy
-func NewCallNode(name string) *Node {
+func NewCallNode(name string, params []*Node) *Node {
 	return &Node{
-		Type:  NodeCall,
-		Ident: name,
+		Type:   NodeCall,
+		Ident:  name,
+		Params: params,
 	}
 }
 
