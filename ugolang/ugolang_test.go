@@ -194,6 +194,34 @@ func TestUgolang(t *testing.T) {
 			code: "func main() { 1-2; }",
 			want: -1,
 		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(0); }",
+			want: 0,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(1); }",
+			want: 1,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(2); }",
+			want: 1,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(3); }",
+			want: 2,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(4); }",
+			want: 3,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(5); }",
+			want: 5,
+		},
+		{
+			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(6); }",
+			want: 8,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
