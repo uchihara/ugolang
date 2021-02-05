@@ -68,6 +68,7 @@ func prog() []Node {
 }
 
 func funcStmt() *Node {
+	dprintf("func start\n")
 	expect(TokenFunc)
 	ident := expectIdent()
 	args := args()
@@ -76,6 +77,7 @@ func funcStmt() *Node {
 }
 
 func args() []string {
+	dprintf("args start\n")
 	expectSign("(")
 	args := make([]string, 0)
 	for len(tokens) > 0 {
@@ -91,6 +93,7 @@ func args() []string {
 }
 
 func params() []*Node {
+	dprintf("params start\n")
 	expectSign("(")
 	params := make([]*Node, 0)
 	for len(tokens) > 0 {
@@ -106,6 +109,7 @@ func params() []*Node {
 }
 
 func block() *Node {
+	dprintf("block start\n")
 	node := NewBlockNode()
 	expectSign("{")
 	for len(tokens) > 0 {
@@ -119,6 +123,7 @@ func block() *Node {
 }
 
 func stmt() *Node {
+	dprintf("stmt start\n")
 	if consume(TokenReturn) {
 		node := NewReturnNode(expr())
 		expect(TokenEOL)
@@ -136,10 +141,12 @@ func stmt() *Node {
 }
 
 func expr() *Node {
+	dprintf("expr start\n")
 	return assign()
 }
 
 func assign() *Node {
+	dprintf("assign start\n")
 	node := eq()
 	if consumeSign("=") {
 		node = NewNode(NodeAssign, node, assign())
@@ -149,6 +156,7 @@ func assign() *Node {
 }
 
 func eq() *Node {
+	dprintf("eq start\n")
 	node := rel()
 	for len(tokens) > 0 {
 		if consumeSign("==") {
@@ -163,6 +171,7 @@ func eq() *Node {
 }
 
 func rel() *Node {
+	dprintf("rel start\n")
 	node := add()
 	for len(tokens) > 0 {
 		if consumeSign("<=") {
