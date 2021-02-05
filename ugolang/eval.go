@@ -83,11 +83,16 @@ func eval(node *Node) (int, bool) {
 		if !ok {
 			panic(fmt.Sprintf("call %s but is not defined", funcName))
 		}
+		vals := make([]int, 0)
+		for _, param := range node.Params {
+			r, _ := eval(param)
+			vals = append(vals, r)
+		}
 		funcStack.push(funcName)
 		fp := funcStack.peek()
-		for i, param := range node.Params {
+		for i, val := range vals {
 			argName := fn.Args[i]
-			fp.locals[argName], _ = eval(param)
+			fp.locals[argName] = val
 		}
 		body := fn.Body
 		r, _ := eval(body)
