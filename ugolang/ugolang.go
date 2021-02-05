@@ -30,7 +30,6 @@ func (u *Ugolang) Exec(code string) int {
 	}
 	ret := 0
 	for _, node := range nodes {
-		eval(&node)
 		dprintf("node=%v\n", node)
 		var isReturn bool
 		ret, isReturn = eval(&node)
