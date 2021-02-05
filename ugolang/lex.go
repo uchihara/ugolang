@@ -115,7 +115,7 @@ func tokenize(code string) []Token {
 			continue
 		}
 
-		signs := []string{"==", "!=", "<=", ">=", "<", ">", "=", "+", "*", "(", ")", "{", "}", ","}
+		signs := []string{"==", "!=", "<=", ">=", "<", ">", "=", "+", "-", "*", "(", ")", "{", "}", ","}
 		if matchLen, matched := matchSigns(signs, code, i); matched {
 			tokens = append(tokens, *NewSignToken(code[i : i+matchLen]))
 			i += (matchLen - 1)

@@ -12,6 +12,8 @@ const (
 	NodeNum NodeType = iota + 1
 	// NodeAdd dummy
 	NodeAdd
+	// NodeSub dummy
+	NodeSub
 	// NodeMul dummy
 	NodeMul
 	// NodeEq dummy
@@ -48,6 +50,8 @@ func (n NodeType) String() string {
 		return "num"
 	case NodeAdd:
 		return "add"
+	case NodeSub:
+		return "sub"
 	case NodeMul:
 		return "mul"
 	case NodeEq:
@@ -104,6 +108,8 @@ func (n Node) String() string {
 		return fmt.Sprintf("num(%d)", n.Val)
 	case NodeAdd:
 		return fmt.Sprintf("add(%s, %s)", n.LHS.String(), n.RHS.String())
+	case NodeSub:
+		return fmt.Sprintf("sub(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeMul:
 		return fmt.Sprintf("mul(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeEq:

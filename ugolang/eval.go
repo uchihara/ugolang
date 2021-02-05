@@ -12,6 +12,10 @@ func eval(node *Node) (int, bool) {
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
 		return l + r, false
+	case NodeSub:
+		l, _ := eval(node.LHS)
+		r, _ := eval(node.RHS)
+		return l - r, false
 	case NodeMul:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)

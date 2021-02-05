@@ -188,6 +188,9 @@ func add() *Node {
 		if consumeSign("+") {
 			node = NewNode(NodeAdd, node, mul())
 			dprintf("add rhs: %v\n", node)
+		} else if consumeSign("-") {
+			node = NewNode(NodeSub, node, mul())
+			dprintf("sub rhs: %v\n", node)
 		} else {
 			break
 		}
