@@ -222,6 +222,10 @@ func TestUgolang(t *testing.T) {
 			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(6); }",
 			want: 8,
 		},
+		{
+			code: "a=1; func foo(a) { call bar(a+1); } func bar(b) { a+b; } func main() { a=2; call foo(a); }",
+			want: 4,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

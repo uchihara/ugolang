@@ -61,19 +61,25 @@ func expectIdent() string {
 func prog() []Node {
 	nodes := make([]Node, 0)
 	for len(tokens) > 0 {
-		node := funcStmt()
+		node, ok := funcStmt()
+		if !ok {
+			node = assign()
+			expect(TokenEOL)
+		}
 		nodes = append(nodes, *node)
 	}
 	return nodes
 }
 
-func funcStmt() *Node {
+func funcStmt() (*Node, bool) {
 	dprintf("func start\n")
-	expect(TokenFunc)
+	if !consume(TokenFunc) {
+		return nil, false
+	}
 	ident := expectIdent()
 	args := args()
 	node := NewFuncNode(ident, args, block())
-	return node
+	return node, true
 }
 
 func args() []string {

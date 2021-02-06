@@ -50,10 +50,10 @@ func eval(node *Node) (int, bool) {
 		return 0, false
 	case NodeAssign:
 		val, _ := eval(node.RHS)
-		funcStack.peek().locals.Set(node.LHS.Ident, val)
+		funcStack.peek().vars.Set(node.LHS.Ident, val)
 		return val, false
 	case NodeVar:
-		return funcStack.peek().locals.Get(node.Ident), false
+		return funcStack.peek().vars.Get(node.Ident), false
 	case NodeIf:
 		cond, _ := eval(node.Cond)
 		if cond != 0 {
@@ -96,7 +96,7 @@ func eval(node *Node) (int, bool) {
 		fp := funcStack.peek()
 		for i, val := range vals {
 			argName := fn.Args[i]
-			fp.locals[argName] = val
+			fp.vars.Set(argName, val)
 		}
 		body := fn.Body
 		r, _ := eval(body)

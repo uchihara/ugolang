@@ -32,7 +32,7 @@ func (f funcMap) Defined(name string) bool {
 // Frame dummy
 type Frame struct {
 	funcName string
-	locals   varsType
+	vars     *NestedVarsType
 }
 
 // FuncStack dummy
@@ -40,10 +40,14 @@ type FuncStack []Frame
 
 var funcStack FuncStack
 
+func (s *FuncStack) reset() {
+	(*s) = []Frame{}
+}
+
 func (s *FuncStack) push(funcName string) {
 	frame := Frame{
 		funcName: funcName,
-		locals:   varsType{},
+		vars:     NewNestedVars(s.count()),
 	}
 	*s = append(*s, frame)
 }

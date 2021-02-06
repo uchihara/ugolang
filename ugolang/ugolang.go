@@ -12,6 +12,7 @@ type Ugolang struct {
 
 // NewUgolang dummy
 func NewUgolang() *Ugolang {
+	funcStack.reset()
 	return &Ugolang{}
 }
 
@@ -25,6 +26,7 @@ func (u *Ugolang) Exec(code string) int {
 	}
 	nodes := prog()
 	nodes = append(nodes, *NewCallNode("main", []*Node{}))
+	funcStack.push("main")
 	if u.DumpNodes {
 		fmt.Printf("nodes: %v\n", nodes)
 	}
