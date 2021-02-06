@@ -24,6 +24,20 @@ func matchToken(token, code string, idx int) (int, bool) {
 	return len(token), true
 }
 
+type tokenPair struct {
+	keyword string
+	token   TokenType
+}
+
+func matchTokens(tokenPairs []tokenPair, code string, idx int) (int, bool, TokenType) {
+	for _, tokenPair := range tokenPairs {
+		if matchLen, matched := matchToken(tokenPair.keyword, code, idx); matched {
+			return matchLen, matched, tokenPair.token
+		}
+	}
+	return 0, false, 0
+}
+
 func matchSign(sign, code string, idx int) (int, bool) {
 	signLen := len(sign)
 	if idx+signLen > len(code) {
@@ -54,40 +68,18 @@ func matchPattern(pattern, code string, idx int) (int, bool) {
 }
 
 func tokenize(code string) []Token {
+	tokenPairs := []tokenPair{
+		{"if", TokenIf},
+		{"else", TokenElse},
+		{"while", TokenWhile},
+		{"func", TokenFunc},
+		{"call", TokenCall},
+		{"return", TokenReturn},
+	}
 	tokens := make([]Token, 0)
 	for i := 0; i < len(code); i++ {
-		if matchLen, matched := matchToken("if", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenIf))
-			i += (matchLen - 1)
-			continue
-		}
-
-		if matchLen, matched := matchToken("else", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenElse))
-			i += (matchLen - 1)
-			continue
-		}
-
-		if matchLen, matched := matchToken("while", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenWhile))
-			i += (matchLen - 1)
-			continue
-		}
-
-		if matchLen, matched := matchToken("func", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenFunc))
-			i += (matchLen - 1)
-			continue
-		}
-
-		if matchLen, matched := matchToken("call", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenCall))
-			i += (matchLen - 1)
-			continue
-		}
-
-		if matchLen, matched := matchToken("return", code, i); matched {
-			tokens = append(tokens, *NewToken(TokenReturn))
+		if matchLen, matched, token := matchTokens(tokenPairs, code, i); matched {
+			tokens = append(tokens, *NewToken(token))
 			i += (matchLen - 1)
 			continue
 		}
