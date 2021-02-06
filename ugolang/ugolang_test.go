@@ -226,6 +226,14 @@ func TestUgolang(t *testing.T) {
 			code: "a=1; func foo(a) { call bar(a+1); } func bar(b) { a+b; } func main() { a=2; call foo(a); }",
 			want: 4,
 		},
+		{
+			code: "func main() { a=0; while 1 { if a == 1 { break; } a=a+1; } a; }",
+			want: 1,
+		},
+		{
+			code: "func main() { a=0; while 1 { if a == 2 { break; } a=a+1; continue; a=a+10; } a; }",
+			want: 2,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

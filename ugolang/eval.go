@@ -4,83 +4,93 @@ import (
 	"fmt"
 )
 
-func eval(node *Node) (int, bool) {
+func eval(node *Node) (ret int, nodeType NodeType) {
+	dprintf("eval start node: %v\n", node)
 	switch node.Type {
 	case NodeNum:
-		return node.Val, false
+		ret, nodeType = node.Val, 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		return l + r, false
+		ret, nodeType = l+r, 0
 	case NodeSub:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		return l - r, false
+		ret, nodeType = l-r, 0
 	case NodeMul:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		return l * r, false
+		ret, nodeType = l*r, 0
 	case NodeEq:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
 		if l == r {
-			return 1, false
+			ret, nodeType = 1, 0
+			goto end
 		}
-		return 0, false
+		ret, nodeType = 0, 0
 	case NodeNe:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
 		if l != r {
-			return 1, false
+			ret, nodeType = 1, 0
+			goto end
 		}
-		return 0, false
+		ret, nodeType = 0, 0
 	case NodeLe:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
 		if l <= r {
-			return 1, false
+			ret, nodeType = 1, 0
+			goto end
 		}
-		return 0, false
+		ret, nodeType = 0, 0
 	case NodeLt:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
 		if l < r {
-			return 1, false
+			ret, nodeType = 1, 0
+			goto end
 		}
-		return 0, false
+		ret, nodeType = 0, 0
 	case NodeAssign:
 		val, _ := eval(node.RHS)
 		funcStack.peek().vars.Set(node.LHS.Ident, val)
-		return val, false
+		ret, nodeType = val, 0
 	case NodeVar:
-		return funcStack.peek().vars.Get(node.Ident), false
+		ret, nodeType = funcStack.peek().vars.Get(node.Ident), 0
 	case NodeIf:
 		cond, _ := eval(node.Cond)
 		if cond != 0 {
-			return eval(node.Then)
+			ret, nodeType = eval(node.Then)
+			goto end
 		}
 		if node.Else != nil {
-			return eval(node.Else)
+			ret, nodeType = eval(node.Else)
+			goto end
 		}
-		return 0, false // FIXME
+		ret, nodeType = 0, 0 // FIXME
 	case NodeWhile:
-		r := 0
 		for {
 			cond, _ := eval(node.Cond)
 			if cond == 0 {
 				break
 			}
-			var isReturn bool
-			r, isReturn = eval(node.Body)
-			if isReturn {
-				return r, true
+			ret, nodeType = eval(node.Body)
+			switch nodeType {
+			case NodeReturn:
+				goto end
+			case NodeBreak:
+				ret, nodeType = 0, 0
+				goto end
+			case NodeContinue:
+				continue
 			}
 		}
-		return r, false
 	case NodeFunc:
 		funcName := node.Ident
 		funcs.Define(funcName, node.Args, node.Body)
-		return 0, false
+		ret, nodeType = 0, 0
 	case NodeCall:
 		funcName := node.Ident
 		fn, ok := funcs.Lookup(funcName)
@@ -101,21 +111,30 @@ func eval(node *Node) (int, bool) {
 		body := fn.Body
 		r, _ := eval(body)
 		funcStack.pop()
-		return r, false
+		ret, nodeType = r, 0
 	case NodeReturn:
 		r, _ := eval(node.Expr)
-		return r, true
+		ret, nodeType = r, node.Type
+	case NodeBreak:
+		ret, nodeType = 0, node.Type
+	case NodeContinue:
+		ret, nodeType = 0, node.Type
 	case NodeBlock:
-		ret := 0
 		for _, stmt := range node.Statements {
-			var isReturn bool
-			ret, isReturn = eval(stmt)
-			if isReturn {
-				return ret, true
+			ret, nodeType = eval(stmt)
+			switch nodeType {
+			case NodeReturn:
+				goto end
+			case NodeBreak:
+				goto end
+			case NodeContinue:
+				goto end
 			}
 		}
-		return ret, false
 	default:
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}
+end:
+	dprintf("eval end,  nodeType: %v, ret: %d, new nodeType: %v\n", node.Type, ret, nodeType)
+	return ret, nodeType
 }

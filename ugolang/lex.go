@@ -75,6 +75,8 @@ func tokenize(code string) []Token {
 		{"func", TokenFunc},
 		{"call", TokenCall},
 		{"return", TokenReturn},
+		{"break", TokenBreak},
+		{"continue", TokenContinue},
 	}
 	tokens := make([]Token, 0)
 	for i := 0; i < len(code); i++ {

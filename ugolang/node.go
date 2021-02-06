@@ -40,6 +40,10 @@ const (
 	NodeCall
 	// NodeReturn dummy
 	NodeReturn
+	// NodeBreak dummy
+	NodeBreak
+	// NodeContinue dummy
+	NodeContinue
 	// NodeBlock dummy
 	NodeBlock
 )
@@ -78,6 +82,10 @@ func (n NodeType) String() string {
 		return "call"
 	case NodeReturn:
 		return "return"
+	case NodeBreak:
+		return "break"
+	case NodeContinue:
+		return "continue"
 	case NodeBlock:
 		return "block"
 	default:
@@ -136,6 +144,10 @@ func (n Node) String() string {
 		return fmt.Sprintf("call(%s, %v)", n.Ident, n.Params)
 	case NodeReturn:
 		return fmt.Sprintf("return(%v)", n.Expr)
+	case NodeBreak:
+		return fmt.Sprintf("break")
+	case NodeContinue:
+		return fmt.Sprintf("continue")
 	case NodeBlock:
 		s := ""
 		for _, stmt := range n.Statements {
@@ -151,7 +163,14 @@ func (n Node) String() string {
 }
 
 // NewNode dummy
-func NewNode(typ NodeType, lhs, rhs *Node) *Node {
+func NewNode(typ NodeType) *Node {
+	return &Node{
+		Type: typ,
+	}
+}
+
+// NewBinNode dummy
+func NewBinNode(typ NodeType, lhs, rhs *Node) *Node {
 	return &Node{
 		Type: typ,
 		LHS:  lhs,

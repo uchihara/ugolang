@@ -63,23 +63,24 @@ func prog() []Node {
 	for len(tokens) > 0 {
 		node, ok := funcStmt()
 		if !ok {
-			node = assign()
-			expect(TokenEOL)
+			node = stmt()
 		}
 		nodes = append(nodes, *node)
 	}
 	return nodes
 }
 
-func funcStmt() (*Node, bool) {
+func funcStmt() (node *Node, ok bool) {
 	dprintf("func start\n")
 	if !consume(TokenFunc) {
-		return nil, false
+		node, ok = nil, false
+		goto end
 	}
-	ident := expectIdent()
-	args := args()
-	node := NewFuncNode(ident, args, block())
-	return node, true
+	node = NewFuncNode(expectIdent(), args(), block())
+	ok = true
+end:
+	dprintf("func end\n")
+	return node, ok
 }
 
 func args() []string {
@@ -95,6 +96,7 @@ func args() []string {
 		}
 		args = append(args, expectIdent())
 	}
+	dprintf("args end\n")
 	return args
 }
 
@@ -111,6 +113,7 @@ func params() []*Node {
 		}
 		params = append(params, expr())
 	}
+	dprintf("params end\n")
 	return params
 }
 
@@ -121,43 +124,61 @@ func block() *Node {
 	for len(tokens) > 0 {
 		node.Statements = append(node.Statements, stmt())
 		if consumeSign("}") {
-			return node
+			goto end
 		}
 	}
 	expectSign("}")
+end:
+	dprintf("block end\n")
 	return node
 }
 
-func stmt() *Node {
+func stmt() (node *Node) {
 	dprintf("stmt start\n")
 	if consume(TokenReturn) {
-		node := NewReturnNode(expr())
+		node = NewReturnNode(expr())
 		expect(TokenEOL)
-		return node
+		goto end
+	}
+	if consume(TokenBreak) {
+		node = NewNode(NodeBreak)
+		expect(TokenEOL)
+		goto end
+	}
+	if consume(TokenContinue) {
+		node = NewNode(NodeContinue)
+		expect(TokenEOL)
+		goto end
 	}
 	if consume(TokenIf) {
-		return ifStmt()
+		node = ifStmt()
+		goto end
 	}
 	if consume(TokenWhile) {
-		return whileStmt()
+		node = whileStmt()
+		goto end
 	}
-	node := expr()
+	node = expr()
 	expect(TokenEOL)
+end:
+	dprintf("stmt end\n")
 	return node
 }
 
 func expr() *Node {
 	dprintf("expr start\n")
-	return assign()
+	node := assign()
+	dprintf("expr end\n")
+	return node
 }
 
 func assign() *Node {
 	dprintf("assign start\n")
 	node := eq()
 	if consumeSign("=") {
-		node = NewNode(NodeAssign, node, assign())
+		node = NewBinNode(NodeAssign, node, assign())
 	}
-
+	dprintf("assign end\n")
 	return node
 }
 
@@ -166,13 +187,14 @@ func eq() *Node {
 	node := rel()
 	for len(tokens) > 0 {
 		if consumeSign("==") {
-			node = NewNode(NodeEq, node, rel())
+			node = NewBinNode(NodeEq, node, rel())
 		} else if consumeSign("!=") {
-			node = NewNode(NodeNe, node, rel())
+			node = NewBinNode(NodeNe, node, rel())
 		} else {
 			break
 		}
 	}
+	dprintf("eq end\n")
 	return node
 }
 
@@ -181,17 +203,18 @@ func rel() *Node {
 	node := add()
 	for len(tokens) > 0 {
 		if consumeSign("<=") {
-			node = NewNode(NodeLe, node, rel())
+			node = NewBinNode(NodeLe, node, rel())
 		} else if consumeSign("<") {
-			node = NewNode(NodeLt, node, rel())
+			node = NewBinNode(NodeLt, node, rel())
 		} else if consumeSign(">=") {
-			node = NewNode(NodeLe, rel(), node)
+			node = NewBinNode(NodeLe, rel(), node)
 		} else if consumeSign(">") {
-			node = NewNode(NodeLt, rel(), node)
+			node = NewBinNode(NodeLt, rel(), node)
 		} else {
 			break
 		}
 	}
+	dprintf("rel end\n")
 	return node
 }
 
@@ -201,15 +224,16 @@ func add() *Node {
 	dprintf("add lhs: %v\n", node)
 	for len(tokens) > 0 {
 		if consumeSign("+") {
-			node = NewNode(NodeAdd, node, mul())
+			node = NewBinNode(NodeAdd, node, mul())
 			dprintf("add rhs: %v\n", node)
 		} else if consumeSign("-") {
-			node = NewNode(NodeSub, node, mul())
+			node = NewBinNode(NodeSub, node, mul())
 			dprintf("sub rhs: %v\n", node)
 		} else {
 			break
 		}
 	}
+	dprintf("add end\n")
 	return node
 }
 
@@ -219,35 +243,41 @@ func mul() *Node {
 	dprintf("mul lhs: %v\n", node)
 	for len(tokens) > 0 {
 		if consumeSign("*") {
-			node = NewNode(NodeMul, node, pri())
+			node = NewBinNode(NodeMul, node, pri())
 			dprintf("mul rhs: %v\n", node)
 		} else {
 			break
 		}
 	}
+	dprintf("mul end\n")
 	return node
 }
 
-func pri() *Node {
+func pri() (node *Node) {
 	dprintf("pri start\n")
+	var ident string
+	var ok bool
 	if consume(TokenCall) {
-		ident := expectIdent()
-		prms := params()
-		return NewCallNode(ident, prms)
+		node = NewCallNode(expectIdent(), params())
+		goto end
 	}
 
 	if consumeSign("(") {
-		node := expr()
+		node = expr()
 		expectSign(")")
-		return node
+		goto end
 	}
 
-	ident, ok := consumeIdent()
+	ident, ok = consumeIdent()
 	if ok {
-		return NewVarNode(ident)
+		node = NewVarNode(ident)
+		goto end
 	}
 
-	return num()
+	node = num()
+end:
+	dprintf("pri end\n")
+	return node
 }
 
 func num() *Node {
@@ -257,7 +287,9 @@ func num() *Node {
 		panic(fmt.Sprintf("%v expect num but got %v", caller(), token))
 	}
 	tokens = tokens[1:]
-	return NewNumNode(token.Num)
+	node := NewNumNode(token.Num)
+	dprintf("num end\n")
+	return node
 }
 
 func ifStmt() *Node {
@@ -268,12 +300,16 @@ func ifStmt() *Node {
 	if consume(TokenElse) {
 		elseNode = block()
 	}
-	return NewIfNode(condNode, thenNode, elseNode)
+	node := NewIfNode(condNode, thenNode, elseNode)
+	dprintf("if end\n")
+	return node
 }
 
 func whileStmt() *Node {
 	dprintf("while start\n")
 	condNode := expr()
 	bodyNode := block()
-	return NewWhileNode(condNode, bodyNode)
+	node := NewWhileNode(condNode, bodyNode)
+	dprintf("while end\n")
+	return node
 }

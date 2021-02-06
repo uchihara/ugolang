@@ -33,9 +33,9 @@ func (u *Ugolang) Exec(code string) int {
 	ret := 0
 	for _, node := range nodes {
 		dprintf("node=%v\n", node)
-		var isReturn bool
-		ret, isReturn = eval(&node)
-		if isReturn {
+		var nodeType NodeType
+		ret, nodeType = eval(&node)
+		if nodeType == NodeReturn {
 			return ret
 		}
 	}
