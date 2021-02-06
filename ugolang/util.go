@@ -27,7 +27,7 @@ func dprintf(f string, param ...interface{}) {
 		return
 	}
 	depth := 0
-	for i := 1; ; i++ {
+	for i := 0; ; i++ {
 		_, _, _, ok := runtime.Caller(i)
 		if !ok {
 			break
@@ -37,7 +37,7 @@ func dprintf(f string, param ...interface{}) {
 	pc, _, _, _ := runtime.Caller(1)
 	fn := runtime.FuncForPC(pc)
 	fileName, fileLine := fn.FileLine(pc)
-	fmt.Printf("%s:%d: ", filepath.Base(fileName), fileLine)
+	fmt.Printf("%s:%4d: ", filepath.Base(fileName), fileLine)
 
 	for i := 8; i < depth; i++ {
 		fmt.Printf(" ")
