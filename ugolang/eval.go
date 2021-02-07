@@ -5,12 +5,12 @@ import (
 )
 
 // Eval dummy
-func Eval(nodes []Node) int {
+func Eval(nodes []*Node) int {
 	ret := 0
 	for _, node := range nodes {
 		dprintf("node=%v\n", node)
 		var nodeType NodeType
-		ret, nodeType = eval(&node)
+		ret, nodeType = eval(node)
 		if nodeType == NodeReturn {
 			return ret
 		}

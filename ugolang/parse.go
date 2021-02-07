@@ -58,16 +58,16 @@ func expectIdent() string {
 	return ident
 }
 
-func prog() []Node {
-	nodes := make([]Node, 0)
+func prog() []*Node {
+	nodes := make([]*Node, 0)
 	for len(tokens) > 0 {
 		node, ok := funcStmt()
 		if !ok {
 			node = stmt()
 		}
-		nodes = append(nodes, *node)
+		nodes = append(nodes, node)
 	}
-	nodes = append(nodes, *NewCallNode("main", []*Node{}))
+	nodes = append(nodes, NewCallNode("main", []*Node{}))
 	funcStack.push("main")
 	return nodes
 }

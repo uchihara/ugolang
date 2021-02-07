@@ -16,7 +16,7 @@ func NewUgolang() *Ugolang {
 	return &Ugolang{}
 }
 
-var tokens []Token
+var tokens []*Token
 
 // Exec dummy
 func (u *Ugolang) Exec(code string) int {
