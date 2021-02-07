@@ -4,6 +4,20 @@ import (
 	"fmt"
 )
 
+// Eval dummy
+func Eval(nodes []Node) int {
+	ret := 0
+	for _, node := range nodes {
+		dprintf("node=%v\n", node)
+		var nodeType NodeType
+		ret, nodeType = eval(&node)
+		if nodeType == NodeReturn {
+			return ret
+		}
+	}
+	return ret
+}
+
 func eval(node *Node) (ret int, nodeType NodeType) {
 	dprintf("eval start node: %v\n", node)
 	switch node.Type {

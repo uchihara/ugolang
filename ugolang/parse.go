@@ -67,6 +67,8 @@ func prog() []Node {
 		}
 		nodes = append(nodes, *node)
 	}
+	nodes = append(nodes, *NewCallNode("main", []*Node{}))
+	funcStack.push("main")
 	return nodes
 }
 
