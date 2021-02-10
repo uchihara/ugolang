@@ -13,6 +13,8 @@ func main() {
 	flag.BoolVar(&dumpTokens, "tokens", false, "dump tokens")
 	var dumpNodes bool
 	flag.BoolVar(&dumpNodes, "nodes", false, "dump nodes")
+	var implicitMain bool
+	flag.BoolVar(&implicitMain, "main", false, "implicit main func")
 	flag.Parse()
 
 	if flag.NArg() != 1 {
@@ -25,6 +27,9 @@ func main() {
 	ugo.DumpTokens = dumpTokens
 	ugo.DumpNodes = dumpNodes
 	code := flag.Arg(0)
+	if implicitMain {
+		code = "func main() { " + code + " }"
+	}
 	n := ugo.Exec(code)
 	fmt.Printf("%s=%d\n", code, n)
 }
