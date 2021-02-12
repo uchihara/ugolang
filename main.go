@@ -30,6 +30,10 @@ func main() {
 	if implicitMain {
 		code = "func main() { " + code + " }"
 	}
-	n := ugo.Exec(code)
+	n, err := ugo.Exec(code)
+	if err != nil {
+		fmt.Printf("%s has error: %s\n", code, err)
+		return
+	}
 	fmt.Printf("%s=%d\n", code, n)
 }

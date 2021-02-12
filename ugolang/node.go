@@ -95,6 +95,7 @@ func (n NodeType) String() string {
 
 // Node dummy
 type Node struct {
+	TokenPos   *TokenPos
 	Type       NodeType
 	Val        int
 	Ident      string
@@ -163,86 +164,96 @@ func (n Node) String() string {
 }
 
 // NewNode dummy
-func NewNode(typ NodeType) *Node {
+func NewNode(tokenPos *TokenPos, typ NodeType) *Node {
 	return &Node{
-		Type: typ,
+		TokenPos: tokenPos,
+		Type:     typ,
 	}
 }
 
 // NewBinNode dummy
-func NewBinNode(typ NodeType, lhs, rhs *Node) *Node {
+func NewBinNode(tokenPos *TokenPos, typ NodeType, lhs, rhs *Node) *Node {
 	return &Node{
-		Type: typ,
-		LHS:  lhs,
-		RHS:  rhs,
+		TokenPos: tokenPos,
+		Type:     typ,
+		LHS:      lhs,
+		RHS:      rhs,
 	}
 }
 
 // NewNumNode dummy
-func NewNumNode(val int) *Node {
+func NewNumNode(tokenPos *TokenPos, val int) *Node {
 	return &Node{
-		Type: NodeNum,
-		Val:  val,
+		TokenPos: tokenPos,
+		Type:     NodeNum,
+		Val:      val,
 	}
 }
 
 // NewVarNode dummy
-func NewVarNode(name string) *Node {
+func NewVarNode(tokenPos *TokenPos, name string) *Node {
 	return &Node{
-		Type:  NodeVar,
-		Ident: name,
+		TokenPos: tokenPos,
+		Type:     NodeVar,
+		Ident:    name,
 	}
 }
 
 // NewIfNode dummy
-func NewIfNode(condNode, thenNode, elseNode *Node) *Node {
+func NewIfNode(tokenPos *TokenPos, condNode, thenNode, elseNode *Node) *Node {
 	return &Node{
-		Type: NodeIf,
-		Cond: condNode,
-		Then: thenNode,
-		Else: elseNode,
+		TokenPos: tokenPos,
+		Type:     NodeIf,
+		Cond:     condNode,
+		Then:     thenNode,
+		Else:     elseNode,
 	}
 }
 
 // NewWhileNode dummy
-func NewWhileNode(condNode, bodyNode *Node) *Node {
+func NewWhileNode(tokenPos *TokenPos, condNode, bodyNode *Node) *Node {
 	return &Node{
-		Type: NodeWhile,
-		Cond: condNode,
-		Body: bodyNode,
+		TokenPos: tokenPos,
+		Type:     NodeWhile,
+		Cond:     condNode,
+		Body:     bodyNode,
 	}
 }
 
 // NewFuncNode dummy
-func NewFuncNode(name string, args []string, bodyNode *Node) *Node {
+func NewFuncNode(tokenPos *TokenPos, name string, args []string, bodyNode *Node) *Node {
 	return &Node{
-		Type:  NodeFunc,
-		Ident: name,
-		Args:  args,
-		Body:  bodyNode,
+		TokenPos: tokenPos,
+		Type:     NodeFunc,
+		Ident:    name,
+		Args:     args,
+		Body:     bodyNode,
 	}
 }
 
 // NewCallNode dummy
-func NewCallNode(name string, params []*Node) *Node {
+func NewCallNode(tokenPos *TokenPos, name string, params []*Node) *Node {
 	return &Node{
-		Type:   NodeCall,
-		Ident:  name,
-		Params: params,
+		TokenPos: tokenPos,
+		Type:     NodeCall,
+		Ident:    name,
+		Params:   params,
 	}
 }
 
 // NewReturnNode dummy
-func NewReturnNode(expr *Node) *Node {
+func NewReturnNode(tokenPos *TokenPos, expr *Node) *Node {
 	return &Node{
-		Type: NodeReturn,
-		Expr: expr,
+		TokenPos: tokenPos,
+		Type:     NodeReturn,
+		Expr:     expr,
 	}
 }
 
 // NewBlockNode dummy
-func NewBlockNode() *Node {
+func NewBlockNode(tokenPos *TokenPos) *Node {
 	return &Node{
-		Type: NodeBlock,
+		TokenPos: tokenPos,
+		Type:     NodeBlock,
 	}
 }

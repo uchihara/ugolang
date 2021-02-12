@@ -67,7 +67,7 @@ func matchPattern(pattern, code string, idx int) (int, bool) {
 	return loc[1] - loc[0], true
 }
 
-func tokenize(code string) []*Token {
+func tokenize(code string) ([]*Token, error) {
 	tokenPairs := []tokenPair{
 		{"if", TokenIf},
 		{"else", TokenElse},
@@ -78,17 +78,25 @@ func tokenize(code string) []*Token {
 		{"break", TokenBreak},
 		{"continue", TokenContinue},
 	}
+	line := 1
+	col := 1
 	tokens := make([]*Token, 0)
 	for i := 0; i < len(code); i++ {
+		c := code[i]
+		if c == '\n' {
+			line++
+			col = 1
+		}
+
 		if matchLen, matched, token := matchTokens(tokenPairs, code, i); matched {
-			tokens = append(tokens, NewToken(token))
+			tokens = append(tokens, NewToken(line, col, token))
 			i += (matchLen - 1)
+			col += matchLen
 			continue
 		}
 
-		c := code[i]
-
 		if c == ' ' {
+			col++
 			continue
 		}
 
@@ -96,30 +104,34 @@ func tokenize(code string) []*Token {
 			numStr := code[i : i+matchLen]
 			num, err := strconv.ParseInt(numStr, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("invalid num format: %s", numStr))
+				return nil, NewCompileError(NewTokenPos(line, col), fmt.Sprintf("invalid num format: %s", numStr))
 			}
-			tokens = append(tokens, NewNumToken(int(num)))
+			tokens = append(tokens, NewNumToken(line, col, int(num)))
 			i += (matchLen - 1)
+			col += matchLen
 			continue
 		}
 
 		if matchLen, matched := matchPattern("^[A-Za-z0-9_]+", code, i); matched {
-			tokens = append(tokens, NewIdentToken(code[i:i+matchLen]))
+			tokens = append(tokens, NewIdentToken(line, col, code[i:i+matchLen]))
 			i += (matchLen - 1)
+			col += matchLen
 			continue
 		}
 
 		signs := []string{"==", "!=", "<=", ">=", "<", ">", "=", "+", "-", "*", "(", ")", "{", "}", ","}
 		if matchLen, matched := matchSigns(signs, code, i); matched {
-			tokens = append(tokens, NewSignToken(code[i:i+matchLen]))
+			tokens = append(tokens, NewSignToken(line, col, code[i:i+matchLen]))
 			i += (matchLen - 1)
+			col += matchLen
 			continue
 		}
 
 		if c == ';' {
-			tokens = append(tokens, NewToken(TokenEOL))
+			tokens = append(tokens, NewToken(line, col, TokenEOL))
+			col++
 			continue
 		}
 	}
-	return tokens
+	return tokens, nil
 }

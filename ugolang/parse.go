@@ -4,314 +4,506 @@ import (
 	"fmt"
 )
 
-func consume(tokenType TokenType) bool {
+func consume(tokenType TokenType) (*Token, bool) {
 	if len(tokens) == 0 {
-		return false
+		return nil, false
 	}
 	if tokenType == tokens[0].Type {
+		token := tokens[0]
 		tokens = tokens[1:]
-		return true
+		return token, true
 	}
-	return false
+	return nil, false
 }
 
-func consumeSign(sign string) bool {
+func consumeSign(sign string) (*Token, bool) {
 	if len(tokens) == 0 {
-		return false
+		return nil, false
 	}
 	if tokens[0].Type == TokenSign && tokens[0].Sign == sign {
+		token := tokens[0]
 		tokens = tokens[1:]
-		return true
+		return token, true
 	}
-	return false
+	return nil, false
 }
 
-func consumeIdent() (string, bool) {
+func consumeIdent() (*Token, string, bool) {
 	if len(tokens) == 0 {
-		return "", false
+		return nil, "", false
 	}
 	token := tokens[0]
 	if token.Type == TokenIdent {
 		tokens = tokens[1:]
-		return token.Ident, true
+		return token, token.Ident, true
 	}
-	return "", false
+	return nil, "", false
 }
 
-func expect(tokenType TokenType) {
-	if !consume(tokenType) {
-		panic(fmt.Sprintf("%v expect %v but got %v", caller(), tokenType, tokens[0].Type))
+func expect(tokenType TokenType) error {
+	if token, ok := consume(tokenType); !ok {
+		return NewCompileError(token.Pos(), fmt.Sprintf("expect %v but got %v", tokenType, token))
 	}
+	return nil
 }
 
-func expectSign(sign string) {
-	if !consumeSign(sign) {
-		panic(fmt.Sprintf("%v expect %s but got %v", caller(), sign, tokens[0]))
-	}
-}
-
-func expectIdent() string {
-	ident, ok := consumeIdent()
+func expectSign(sign string) (*Token, error) {
+	token, ok := consumeSign(sign)
 	if !ok {
-		panic(fmt.Sprintf("%v expect ident but got %v", caller(), tokens[0]))
+		return nil, NewCompileError(token.Pos(), fmt.Sprintf("expect %s but got %v", sign, token))
 	}
-	return ident
+	return token, nil
 }
 
-func prog() []*Node {
+func expectIdent() (*Token, string, error) {
+	token, ident, ok := consumeIdent()
+	if !ok {
+		return nil, "", NewCompileError(token.Pos(), fmt.Sprintf("%v expect ident but got %v", caller(), tokens[0]))
+	}
+	return token, ident, nil
+}
+
+func prog() ([]*Node, error) {
 	nodes := make([]*Node, 0)
 	for len(tokens) > 0 {
-		node, ok := funcStmt()
+		node, ok, err := funcStmt()
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
-			node = stmt()
+			node, err = stmt()
+			if err != nil {
+				return nil, err
+			}
 		}
 		nodes = append(nodes, node)
 	}
-	nodes = append(nodes, NewCallNode("main", []*Node{}))
+	nodes = append(nodes, NewCallNode(nil, "main", []*Node{}))
 	funcStack.push("main")
-	return nodes
+	return nodes, nil
 }
 
-func funcStmt() (node *Node, ok bool) {
+func funcStmt() (node *Node, ok bool, err error) {
 	dprintf("func start\n")
-	if !consume(TokenFunc) {
-		node, ok = nil, false
+	var ident string
+	var argss []string
+	var blockNode *Node
+	token, isFunc := consume(TokenFunc)
+	if !isFunc {
 		goto end
 	}
-	node = NewFuncNode(expectIdent(), args(), block())
+	_, ident, err = expectIdent()
+	if err != nil {
+		goto end
+	}
+	argss, err = args()
+	if err != nil {
+		goto end
+	}
+	blockNode, err = block()
+	if err != nil {
+		goto end
+	}
+	node = NewFuncNode(token.Pos(), ident, argss, blockNode)
 	ok = true
 end:
 	dprintf("func end\n")
-	return node, ok
+	return node, ok, err
 }
 
-func args() []string {
+func args() (args []string, err error) {
 	dprintf("args start\n")
-	expectSign("(")
-	args := make([]string, 0)
+	_, err = expectSign("(")
+	if err != nil {
+		goto end
+	}
+	args = make([]string, 0)
 	for len(tokens) > 0 {
-		if consumeSign(")") {
+		var ident string
+		var ok bool
+		if _, ok = consumeSign(")"); ok {
 			break
 		}
 		if len(args) != 0 {
-			expectSign(",")
+			_, err = expectSign(",")
+			if err != nil {
+				goto end
+			}
 		}
-		args = append(args, expectIdent())
+		_, ident, err = expectIdent()
+		if err != nil {
+			goto end
+		}
+		args = append(args, ident)
 	}
+end:
 	dprintf("args end\n")
-	return args
+	return args, err
 }
 
-func params() []*Node {
+func params() (params []*Node, err error) {
 	dprintf("params start\n")
-	expectSign("(")
-	params := make([]*Node, 0)
+	_, err = expectSign("(")
+	if err != nil {
+		goto end
+	}
+	params = make([]*Node, 0)
 	for len(tokens) > 0 {
-		if consumeSign(")") {
+		if _, ok := consumeSign(")"); ok {
 			break
 		}
 		if len(params) != 0 {
-			expectSign(",")
+			_, err = expectSign(",")
+			if err != nil {
+				goto end
+			}
 		}
-		params = append(params, expr())
+		var exprNode *Node
+		exprNode, err = expr()
+		if err != nil {
+			goto end
+		}
+		params = append(params, exprNode)
 	}
+end:
 	dprintf("params end\n")
-	return params
+	return params, err
 }
 
-func block() *Node {
+func block() (node *Node, err error) {
 	dprintf("block start\n")
-	node := NewBlockNode()
-	expectSign("{")
+	var token *Token
+	token, err = expectSign("{")
+	if err != nil {
+		goto end
+	}
+	node = NewBlockNode(token.Pos())
 	for len(tokens) > 0 {
-		node.Statements = append(node.Statements, stmt())
-		if consumeSign("}") {
+		var stmtNode *Node
+		stmtNode, err = stmt()
+		if err != nil {
+			goto end
+		}
+		node.Statements = append(node.Statements, stmtNode)
+		_, ok := consumeSign("}")
+		if ok {
 			goto end
 		}
 	}
-	expectSign("}")
+	_, err = expectSign("}")
+	if err != nil {
+		goto end
+	}
 end:
 	dprintf("block end\n")
-	return node
+	return node, err
 }
 
-func stmt() (node *Node) {
+func stmt() (node *Node, err error) {
 	dprintf("stmt start\n")
-	if consume(TokenReturn) {
-		node = NewReturnNode(expr())
-		expect(TokenEOL)
+	if token, ok := consume(TokenReturn); ok {
+		var exprNode *Node
+		exprNode, err = expr()
+		if err != nil {
+			goto end
+		}
+		node = NewReturnNode(token.Pos(), exprNode)
+		err = expect(TokenEOL)
+		if err != nil {
+			goto end
+		}
 		goto end
 	}
-	if consume(TokenBreak) {
-		node = NewNode(NodeBreak)
-		expect(TokenEOL)
+	if token, ok := consume(TokenBreak); ok {
+		node = NewNode(token.Pos(), NodeBreak)
+		err = expect(TokenEOL)
+		if err != nil {
+			goto end
+		}
 		goto end
 	}
-	if consume(TokenContinue) {
-		node = NewNode(NodeContinue)
-		expect(TokenEOL)
+	if token, ok := consume(TokenContinue); ok {
+		node = NewNode(token.Pos(), NodeContinue)
+		err = expect(TokenEOL)
+		if err != nil {
+			goto end
+		}
 		goto end
 	}
-	if consume(TokenIf) {
-		node = ifStmt()
+	if token, ok := consume(TokenIf); ok {
+		node, err = ifStmt(token)
 		goto end
 	}
-	if consume(TokenWhile) {
-		node = whileStmt()
+	if token, ok := consume(TokenWhile); ok {
+		node, err = whileStmt(token)
 		goto end
 	}
-	node = expr()
-	expect(TokenEOL)
+	node, err = expr()
+	if err != nil {
+		goto end
+	}
+	err = expect(TokenEOL)
+	if err != nil {
+		goto end
+	}
 end:
 	dprintf("stmt end\n")
-	return node
+	return node, err
 }
 
-func expr() *Node {
+func expr() (node *Node, err error) {
 	dprintf("expr start\n")
-	node := assign()
+	node, err = assign()
 	dprintf("expr end\n")
-	return node
+	return node, err
 }
 
-func assign() *Node {
+func assign() (node *Node, err error) {
 	dprintf("assign start\n")
-	node := eq()
-	if consumeSign("=") {
-		node = NewBinNode(NodeAssign, node, assign())
+	node, err = eq()
+	if err != nil {
+		goto end
 	}
+	if token, ok := consumeSign("="); ok {
+		var assignNode *Node
+		assignNode, err = assign()
+		if err != nil {
+			goto end
+		}
+		node = NewBinNode(token.Pos(), NodeAssign, node, assignNode)
+
+	}
+end:
 	dprintf("assign end\n")
-	return node
+	return node, err
 }
 
-func eq() *Node {
+func eq() (node *Node, err error) {
 	dprintf("eq start\n")
-	node := rel()
+	node, err = rel()
+	if err != nil {
+		goto end
+	}
 	for len(tokens) > 0 {
-		if consumeSign("==") {
-			node = NewBinNode(NodeEq, node, rel())
-		} else if consumeSign("!=") {
-			node = NewBinNode(NodeNe, node, rel())
+		var rhs *Node
+		if token, ok := consumeSign("=="); ok {
+			rhs, err = rel()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeEq, node, rhs)
+		} else if token, ok := consumeSign("!="); ok {
+			rhs, err = rel()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeNe, node, rhs)
 		} else {
 			break
 		}
 	}
+end:
 	dprintf("eq end\n")
-	return node
+	return node, err
 }
 
-func rel() *Node {
+func rel() (node *Node, err error) {
 	dprintf("rel start\n")
-	node := add()
+	node, err = add()
+	if err != nil {
+		goto end
+	}
 	for len(tokens) > 0 {
-		if consumeSign("<=") {
-			node = NewBinNode(NodeLe, node, rel())
-		} else if consumeSign("<") {
-			node = NewBinNode(NodeLt, node, rel())
-		} else if consumeSign(">=") {
-			node = NewBinNode(NodeLe, rel(), node)
-		} else if consumeSign(">") {
-			node = NewBinNode(NodeLt, rel(), node)
+		var lhs, rhs *Node
+		if token, ok := consumeSign("<="); ok {
+			rhs, err = rel()
+			if err != nil {
+				goto end
+			}
+
+			node = NewBinNode(token.Pos(), NodeLe, node, rhs)
+		} else if token, ok := consumeSign("<"); ok {
+			rhs, err = rel()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeLt, node, rhs)
+		} else if token, ok := consumeSign(">="); ok {
+			lhs, err = rel()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeLe, lhs, node)
+		} else if token, ok := consumeSign(">"); ok {
+			lhs, err = rel()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeLt, lhs, node)
 		} else {
 			break
 		}
 	}
+end:
 	dprintf("rel end\n")
-	return node
+	return node, err
 }
 
-func add() *Node {
+func add() (node *Node, err error) {
 	dprintf("add start\n")
-	node := mul()
+	node, err = mul()
+	if err != nil {
+		goto end
+	}
 	dprintf("add lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consumeSign("+") {
-			node = NewBinNode(NodeAdd, node, mul())
+		var rhs *Node
+		if token, ok := consumeSign("+"); ok {
+			rhs, err = mul()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeAdd, node, rhs)
 			dprintf("add rhs: %v\n", node)
-		} else if consumeSign("-") {
-			node = NewBinNode(NodeSub, node, mul())
+		} else if token, ok := consumeSign("-"); ok {
+			rhs, err = mul()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeSub, node, rhs)
 			dprintf("sub rhs: %v\n", node)
 		} else {
 			break
 		}
 	}
+end:
 	dprintf("add end\n")
-	return node
+	return node, err
 }
 
-func mul() *Node {
+func mul() (node *Node, err error) {
 	dprintf("mul start\n")
-	node := pri()
+	var rhs *Node
+	node, err = pri()
+	if err != nil {
+		goto end
+	}
 	dprintf("mul lhs: %v\n", node)
 	for len(tokens) > 0 {
-		if consumeSign("*") {
-			node = NewBinNode(NodeMul, node, pri())
+		if token, ok := consumeSign("*"); ok {
+			rhs, err = pri()
+			if err != nil {
+				goto end
+			}
+			node = NewBinNode(token.Pos(), NodeMul, node, rhs)
 			dprintf("mul rhs: %v\n", node)
 		} else {
 			break
 		}
 	}
+end:
 	dprintf("mul end\n")
-	return node
+	return node, err
 }
 
-func pri() (node *Node) {
+func pri() (node *Node, err error) {
 	dprintf("pri start\n")
+	var token *Token
 	var ident string
 	var ok bool
-	if consume(TokenCall) {
-		node = NewCallNode(expectIdent(), params())
+	var paramss []*Node
+	if token, ok = consume(TokenCall); ok {
+		_, ident, err = expectIdent()
+		if err != nil {
+			goto end
+		}
+		paramss, err = params()
+		if err != nil {
+			goto end
+		}
+		node = NewCallNode(token.Pos(), ident, paramss)
 		goto end
 	}
 
-	if consumeSign("(") {
-		node = expr()
-		expectSign(")")
+	if token, ok = consumeSign("("); ok {
+		node, err = expr()
+		if err != nil {
+			goto end
+		}
+		_, err = expectSign(")")
 		goto end
 	}
 
-	ident, ok = consumeIdent()
+	token, ident, ok = consumeIdent()
 	if ok {
-		node = NewVarNode(ident)
+		node = NewVarNode(token.Pos(), ident)
 		goto end
 	}
 
-	node = num()
+	node, err = num()
+	if err != nil {
+		goto end
+	}
 end:
 	dprintf("pri end\n")
-	return node
+	return node, err
 }
 
-func num() *Node {
+func num() (node *Node, err error) {
 	dprintf("num start\n")
-	token := tokens[0]
+	var token *Token
+	if len(tokens) == 0 {
+		err = NewCompileError(nil, fmt.Sprintf("expect num but no more tokens"))
+		goto end
+	}
+	token = tokens[0]
 	if token.Type != TokenNum {
-		panic(fmt.Sprintf("%v expect num but got %v", caller(), token))
+		err = NewCompileError(token.Pos(), fmt.Sprintf("expect num but no got %v", token))
+		goto end
 	}
 	tokens = tokens[1:]
-	node := NewNumNode(token.Num)
+	node = NewNumNode(token.Pos(), token.Num)
+end:
 	dprintf("num end\n")
-	return node
+	return node, err
 }
 
-func ifStmt() *Node {
+func ifStmt(ifToken *Token) (node *Node, err error) {
 	dprintf("if start\n")
-	condNode := expr()
-	thenNode := block()
-	var elseNode *Node
-	if consume(TokenElse) {
-		elseNode = block()
+	var condNode, thenNode, elseNode *Node
+	condNode, err = expr()
+	if err != nil {
+		goto end
 	}
-	node := NewIfNode(condNode, thenNode, elseNode)
+	thenNode, err = block()
+	if err != nil {
+		goto end
+	}
+	if _, ok := consume(TokenElse); ok {
+		elseNode, err = block()
+		if err != nil {
+			goto end
+		}
+	}
+	node = NewIfNode(ifToken.Pos(), condNode, thenNode, elseNode)
+end:
 	dprintf("if end\n")
-	return node
+	return node, err
 }
 
-func whileStmt() *Node {
+func whileStmt(whileToken *Token) (node *Node, err error) {
+	var condNode, bodyNode *Node
 	dprintf("while start\n")
-	condNode := expr()
-	bodyNode := block()
-	node := NewWhileNode(condNode, bodyNode)
+	condNode, err = expr()
+	if err != nil {
+		goto end
+	}
+	bodyNode, err = block()
+	if err != nil {
+		goto end
+	}
+	node = NewWhileNode(whileToken.Pos(), condNode, bodyNode)
+end:
 	dprintf("while end\n")
-	return node
+	return node, err
 }

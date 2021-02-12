@@ -63,15 +63,54 @@ func (t TokenType) String() string {
 	}
 }
 
+// TokenPos dummy
+type TokenPos struct {
+	line   int
+	column int
+}
+
+// NewTokenPos dummy
+func NewTokenPos(line, column int) *TokenPos {
+	return &TokenPos{
+		line:   line,
+		column: column,
+	}
+}
+
+// Line dummy
+func (p *TokenPos) Line() int {
+	if p == nil {
+		return 0
+	}
+	return p.line
+}
+
+// Column dummy
+func (p *TokenPos) Column() int {
+	if p == nil {
+		return 0
+	}
+	return p.column
+}
+
 // Token dummy
 type Token struct {
+	pos   *TokenPos
 	Type  TokenType
 	Num   int
 	Sign  string
 	Ident string
 }
 
-func (t Token) String() string {
+// Pos dummy
+func (t *Token) Pos() *TokenPos {
+	if t == nil {
+		return nil
+	}
+	return t.pos
+}
+
+func (t *Token) String() string {
 	switch t.Type {
 	case TokenNum:
 		return fmt.Sprintf("num(%d)", t.Num)
@@ -103,31 +142,35 @@ func (t Token) String() string {
 }
 
 // NewToken dummy
-func NewToken(typ TokenType) *Token {
+func NewToken(line, column int, typ TokenType) *Token {
 	return &Token{
+		pos:  NewTokenPos(line, column),
 		Type: typ,
 	}
 }
 
 // NewNumToken dummy
-func NewNumToken(num int) *Token {
+func NewNumToken(line, column, num int) *Token {
 	return &Token{
+		pos:  NewTokenPos(line, column),
 		Type: TokenNum,
 		Num:  num,
 	}
 }
 
 // NewSignToken dummy
-func NewSignToken(sign string) *Token {
+func NewSignToken(line, column int, sign string) *Token {
 	return &Token{
+		pos:  NewTokenPos(line, column),
 		Type: TokenSign,
 		Sign: sign,
 	}
 }
 
 // NewIdentToken dummy
-func NewIdentToken(ident string) *Token {
+func NewIdentToken(line, column int, ident string) *Token {
 	return &Token{
+		pos:   NewTokenPos(line, column),
 		Type:  TokenIdent,
 		Ident: ident,
 	}

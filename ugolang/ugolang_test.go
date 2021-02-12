@@ -6,10 +6,15 @@ import (
 
 func TestUgolang(t *testing.T) {
 	type test struct {
-		code string
-		want int
+		code      string
+		want      int
+		wantError bool
 	}
 	tts := []test{
+		{
+			code:      ";",
+			wantError: true,
+		},
 		{
 			code: "func main() { 1; }",
 			want: 1,
@@ -237,7 +242,10 @@ func TestUgolang(t *testing.T) {
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
-		actual := ugo.Exec(tt.code)
+		actual, err := ugo.Exec(tt.code)
+		if (err != nil) != tt.wantError {
+			t.Errorf("%s expect error is %v but got %s", tt.code, tt.wantError, err)
+		}
 		if actual != tt.want {
 			t.Errorf("%s expect %d but got %d", tt.code, tt.want, actual)
 		}
