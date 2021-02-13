@@ -135,6 +135,8 @@ func tokenize(code string) ([]*Token, error) {
 			col++
 			continue
 		}
+
+		return nil, NewCompileError(NewTokenPos(line, col), fmt.Sprintf("unknown character found: %c", c))
 	}
 	return tokens, nil
 }
