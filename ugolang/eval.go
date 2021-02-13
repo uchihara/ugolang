@@ -22,7 +22,7 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 	dprintf("eval start node: %v\n", node)
 	switch node.Type {
 	case NodeNum:
-		ret, nodeType = node.Val, 0
+		ret, nodeType = node.Num, 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
