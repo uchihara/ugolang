@@ -10,6 +10,8 @@ type TokenType int
 const (
 	// TokenNum dummmy
 	TokenNum TokenType = iota + 1
+	// TokenStr dummmy
+	TokenStr
 	// TokenSign dummmy
 	TokenSign
 	// TokenIdent dummmy
@@ -38,6 +40,8 @@ func (t TokenType) String() string {
 	switch t {
 	case TokenNum:
 		return "numToken"
+	case TokenStr:
+		return "strToken"
 	case TokenSign:
 		return "signToken"
 	case TokenIdent:
@@ -98,6 +102,7 @@ type Token struct {
 	pos   *TokenPos
 	Type  TokenType
 	Num   int
+	Str   string
 	Sign  string
 	Ident string
 }
@@ -114,6 +119,8 @@ func (t *Token) String() string {
 	switch t.Type {
 	case TokenNum:
 		return fmt.Sprintf("num(%d)", t.Num)
+	case TokenStr:
+		return fmt.Sprintf("str(%s)", t.Str)
 	case TokenSign:
 		return fmt.Sprintf("sign(%s)", t.Sign)
 	case TokenIdent:
@@ -155,6 +162,15 @@ func NewNumToken(line, column, num int) *Token {
 		pos:  NewTokenPos(line, column),
 		Type: TokenNum,
 		Num:  num,
+	}
+}
+
+// NewStrToken dummy
+func NewStrToken(line, column int, str string) *Token {
+	return &Token{
+		pos:  NewTokenPos(line, column),
+		Type: TokenStr,
+		Str:  str,
 	}
 }
 

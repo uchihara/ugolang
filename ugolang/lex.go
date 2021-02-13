@@ -67,6 +67,57 @@ func matchPattern(pattern, code string) (int, bool) {
 	return loc[1] - loc[0], true
 }
 
+func matchString(code string) (int, bool, string, error) {
+	if len(code) == 0 {
+		return 0, false, "", nil
+	}
+	if code[0] != '"' {
+		return 0, false, "", nil
+	}
+	matchedStr := make([]rune, 0)
+
+	pos := 1
+	for {
+		if pos >= len(code) {
+			return 0, false, "", fmt.Errorf("unquoted string")
+		}
+		c := rune(code[pos])
+		if c == '"' {
+			pos++
+			break
+		}
+		if c == '\\' {
+			if pos >= len(code) {
+				return 0, false, "", fmt.Errorf("unexpected escape character")
+			}
+			pos++
+			var escaped rune
+			switch code[pos] {
+			case 'n':
+				escaped = '\n'
+			case 'r':
+				escaped = '\r'
+			case 't':
+				escaped = '\t'
+			case 'b':
+				escaped = '\b'
+			case '"':
+				escaped = '"'
+			case '\\':
+				escaped = '\\'
+			default:
+				return 0, false, "", fmt.Errorf("unexpected escape character: %c", code[pos])
+			}
+			matchedStr = append(matchedStr, escaped)
+			pos++
+			continue
+		}
+		matchedStr = append(matchedStr, c)
+		pos++
+	}
+	return pos, true, string(matchedStr), nil
+}
+
 func tokenize(code string) ([]*Token, error) {
 	tokenPairs := []tokenPair{
 		{"if", TokenIf},
@@ -124,6 +175,16 @@ func tokenize(code string) ([]*Token, error) {
 		signs := []string{"==", "!=", "<=", ">=", "<", ">", "=", "+", "-", "*", "(", ")", "{", "}", ","}
 		if matchLen, matched := matchSigns(signs, code[pos:len(code)]); matched {
 			tokens = append(tokens, NewSignToken(line, col, code[pos:pos+matchLen]))
+			pos += matchLen
+			col += matchLen
+			continue
+		}
+
+		if matchLen, matched, str, err := matchString(code[pos:len(code)]); matched || err != nil {
+			if err != nil {
+				return nil, NewCompileError(NewTokenPos(line, col), err.Error())
+			}
+			tokens = append(tokens, NewStrToken(line, col, str))
 			pos += matchLen
 			col += matchLen
 			continue
