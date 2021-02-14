@@ -251,6 +251,38 @@ func main() {
 `,
 			want: NewNumVal(2),
 		},
+		{
+			code: `
+func mod(a, b) {
+	while a - b >= 0 {
+		a = a - b;
+	}
+	return a;
+}
+func main() {
+	s = "";
+	i = 1;
+	while i <= 15 {
+		if call mod(i, 15) == 0 {
+			s = s + "fizzbuzz\n";
+		} else {
+			if call mod(i, 3) == 0 {
+				s = s + "fizz\n";
+			} else {
+				if call mod(i, 5) == 0 {
+					s = s + "buzz\n";
+				} else {
+					s = s + call sprintf("%d\n", i);
+				}
+			}
+		}
+		i = i + 1;
+	}
+	return s;
+}
+`,
+			want: NewStrVal("1\n2\nfizz\n4\nbuzz\nfizz\n7\n8\nfizz\nbuzz\n11\nfizz\n13\n14\nfizzbuzz\n"),
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
