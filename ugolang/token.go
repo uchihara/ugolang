@@ -8,10 +8,8 @@ import (
 type TokenType int
 
 const (
-	// TokenNum dummmy
-	TokenNum TokenType = iota + 1
-	// TokenStr dummmy
-	TokenStr
+	// TokenVal dummmy
+	TokenVal TokenType = iota + 1
 	// TokenSign dummmy
 	TokenSign
 	// TokenIdent dummmy
@@ -38,10 +36,8 @@ const (
 
 func (t TokenType) String() string {
 	switch t {
-	case TokenNum:
-		return "numToken"
-	case TokenStr:
-		return "strToken"
+	case TokenVal:
+		return "valToken"
 	case TokenSign:
 		return "signToken"
 	case TokenIdent:
@@ -101,8 +97,7 @@ func (p *TokenPos) Column() int {
 type Token struct {
 	pos   *TokenPos
 	Type  TokenType
-	Num   int
-	Str   string
+	Val   *Val
 	Sign  string
 	Ident string
 }
@@ -117,10 +112,8 @@ func (t *Token) Pos() *TokenPos {
 
 func (t *Token) String() string {
 	switch t.Type {
-	case TokenNum:
-		return fmt.Sprintf("num(%d)", t.Num)
-	case TokenStr:
-		return fmt.Sprintf("str(%s)", t.Str)
+	case TokenVal:
+		return fmt.Sprintf("val(%v)", t.Val)
 	case TokenSign:
 		return fmt.Sprintf("sign(%s)", t.Sign)
 	case TokenIdent:
@@ -156,21 +149,12 @@ func NewToken(line, column int, typ TokenType) *Token {
 	}
 }
 
-// NewNumToken dummy
-func NewNumToken(line, column, num int) *Token {
+// NewValToken dummy
+func NewValToken(line, column int, val *Val) *Token {
 	return &Token{
 		pos:  NewTokenPos(line, column),
-		Type: TokenNum,
-		Num:  num,
-	}
-}
-
-// NewStrToken dummy
-func NewStrToken(line, column int, str string) *Token {
-	return &Token{
-		pos:  NewTokenPos(line, column),
-		Type: TokenStr,
-		Str:  str,
+		Type: TokenVal,
+		Val:  val,
 	}
 }
 

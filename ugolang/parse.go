@@ -440,7 +440,7 @@ func pri() (node *Node, err error) {
 		goto end
 	}
 
-	node, err = num()
+	node, err = val()
 	if err != nil {
 		goto end
 	}
@@ -449,22 +449,22 @@ end:
 	return node, err
 }
 
-func num() (node *Node, err error) {
-	dprintf("num start\n")
+func val() (node *Node, err error) {
+	dprintf("val start\n")
 	var token *Token
 	if len(tokens) == 0 {
-		err = NewCompileError(nil, fmt.Sprintf("expect num but no more tokens"))
+		err = NewCompileError(nil, fmt.Sprintf("expect val but no more tokens"))
 		goto end
 	}
 	token = tokens[0]
-	if token.Type != TokenNum {
-		err = NewCompileError(token.Pos(), fmt.Sprintf("expect num but no got %v", token))
+	if token.Type != TokenVal {
+		err = NewCompileError(token.Pos(), fmt.Sprintf("expect val but no got %v", token))
 		goto end
 	}
 	tokens = tokens[1:]
-	node = NewNumNode(token.Pos(), token.Num)
+	node = NewValNode(token.Pos(), token.Val)
 end:
-	dprintf("num end\n")
+	dprintf("val end\n")
 	return node, err
 }
 

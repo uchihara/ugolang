@@ -159,7 +159,7 @@ func tokenize(code string) ([]*Token, error) {
 			if err != nil {
 				return nil, NewCompileError(NewTokenPos(line, col), fmt.Sprintf("invalid num format: %s", numStr))
 			}
-			tokens = append(tokens, NewNumToken(line, col, int(num)))
+			tokens = append(tokens, NewValToken(line, col, NewNumVal(int(num))))
 			pos += matchLen
 			col += matchLen
 			continue
@@ -184,7 +184,7 @@ func tokenize(code string) ([]*Token, error) {
 			if err != nil {
 				return nil, NewCompileError(NewTokenPos(line, col), err.Error())
 			}
-			tokens = append(tokens, NewStrToken(line, col, str))
+			tokens = append(tokens, NewValToken(line, col, NewStrVal(str)))
 			pos += matchLen
 			col += matchLen
 			continue

@@ -35,5 +35,5 @@ func main() {
 		fmt.Printf("%s has error: %s\n", code, err)
 		return
 	}
-	fmt.Printf("%s=%d\n", code, n)
+	fmt.Printf("%s=%v\n", code, n)
 }

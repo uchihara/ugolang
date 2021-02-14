@@ -5,8 +5,8 @@ import (
 )
 
 // Eval dummy
-func Eval(nodes []*Node) int {
-	ret := 0
+func Eval(nodes []*Node) *Val {
+	var ret *Val
 	for _, node := range nodes {
 		dprintf("node=%v\n", node)
 		var nodeType NodeType
@@ -18,55 +18,55 @@ func Eval(nodes []*Node) int {
 	return ret
 }
 
-func eval(node *Node) (ret int, nodeType NodeType) {
+func eval(node *Node) (ret *Val, nodeType NodeType) {
 	dprintf("eval start node: %v\n", node)
 	switch node.Type {
-	case NodeNum:
-		ret, nodeType = node.Num, 0
+	case NodeVal:
+		ret, nodeType = node.Val, 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		ret, nodeType = l+r, 0
+		ret, nodeType = l.Add(r), 0
 	case NodeSub:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		ret, nodeType = l-r, 0
+		ret, nodeType = l.Sub(r), 0
 	case NodeMul:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		ret, nodeType = l*r, 0
+		ret, nodeType = l.Mul(r), 0
 	case NodeEq:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		if l == r {
-			ret, nodeType = 1, 0
+		if l.Eq(r) {
+			ret, nodeType = NewNumVal(1), 0
 			goto end
 		}
-		ret, nodeType = 0, 0
+		ret, nodeType = NewNumVal(0), 0
 	case NodeNe:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		if l != r {
-			ret, nodeType = 1, 0
+		if l.Ne(r) {
+			ret, nodeType = NewNumVal(1), 0
 			goto end
 		}
-		ret, nodeType = 0, 0
+		ret, nodeType = NewNumVal(0), 0
 	case NodeLe:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		if l <= r {
-			ret, nodeType = 1, 0
+		if l.Num <= r.Num {
+			ret, nodeType = NewNumVal(1), 0
 			goto end
 		}
-		ret, nodeType = 0, 0
+		ret, nodeType = NewNumVal(0), 0
 	case NodeLt:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
-		if l < r {
-			ret, nodeType = 1, 0
+		if l.Num < r.Num {
+			ret, nodeType = NewNumVal(1), 0
 			goto end
 		}
-		ret, nodeType = 0, 0
+		ret, nodeType = NewNumVal(0), 0
 	case NodeAssign:
 		val, _ := eval(node.RHS)
 		funcStack.peek().vars.Set(node.LHS.Ident, val)
@@ -75,7 +75,7 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 		ret, nodeType = funcStack.peek().vars.Get(node.Ident), 0
 	case NodeIf:
 		cond, _ := eval(node.Cond)
-		if cond != 0 {
+		if cond.Num != 0 {
 			ret, nodeType = eval(node.Then)
 			goto end
 		}
@@ -83,11 +83,11 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 			ret, nodeType = eval(node.Else)
 			goto end
 		}
-		ret, nodeType = 0, 0 // FIXME
+		ret, nodeType = NewNumVal(0), 0 // FIXME
 	case NodeWhile:
 		for {
 			cond, _ := eval(node.Cond)
-			if cond == 0 {
+			if cond.Num == 0 {
 				break
 			}
 			ret, nodeType = eval(node.Body)
@@ -95,7 +95,7 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 			case NodeReturn:
 				goto end
 			case NodeBreak:
-				ret, nodeType = 0, 0
+				ret, nodeType = NewNumVal(0), 0
 				goto end
 			case NodeContinue:
 				continue
@@ -104,14 +104,14 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 	case NodeFunc:
 		funcName := node.Ident
 		funcs.Define(funcName, node.Args, node.Body)
-		ret, nodeType = 0, 0
+		ret, nodeType = NewNumVal(0), 0
 	case NodeCall:
 		funcName := node.Ident
 		fn, ok := funcs.Lookup(funcName)
 		if !ok {
 			panic(fmt.Sprintf("call %s but is not defined", funcName))
 		}
-		vals := make([]int, 0)
+		vals := make([]*Val, 0)
 		for _, param := range node.Params {
 			r, _ := eval(param)
 			vals = append(vals, r)
@@ -130,9 +130,9 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 		r, _ := eval(node.Expr)
 		ret, nodeType = r, node.Type
 	case NodeBreak:
-		ret, nodeType = 0, node.Type
+		ret, nodeType = NewNumVal(0), node.Type
 	case NodeContinue:
-		ret, nodeType = 0, node.Type
+		ret, nodeType = NewNumVal(0), node.Type
 	case NodeBlock:
 		for _, stmt := range node.Statements {
 			ret, nodeType = eval(stmt)
@@ -149,6 +149,6 @@ func eval(node *Node) (ret int, nodeType NodeType) {
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}
 end:
-	dprintf("eval end,  nodeType: %v, ret: %d, new nodeType: %v\n", node.Type, ret, nodeType)
+	dprintf("eval end,  nodeType: %v, ret: %v, new nodeType: %v\n", node.Type, ret, nodeType)
 	return ret, nodeType
 }

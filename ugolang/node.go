@@ -8,8 +8,8 @@ import (
 type NodeType int
 
 const (
-	// NodeNum dummy
-	NodeNum NodeType = iota + 1
+	// NodeVal dummy
+	NodeVal NodeType = iota + 1
 	// NodeAdd dummy
 	NodeAdd
 	// NodeSub dummy
@@ -50,8 +50,8 @@ const (
 
 func (n NodeType) String() string {
 	switch n {
-	case NodeNum:
-		return "num"
+	case NodeVal:
+		return "val"
 	case NodeAdd:
 		return "add"
 	case NodeSub:
@@ -97,7 +97,7 @@ func (n NodeType) String() string {
 type Node struct {
 	TokenPos   *TokenPos
 	Type       NodeType
-	Num        int
+	Val        *Val
 	Ident      string
 	LHS        *Node
 	RHS        *Node
@@ -113,8 +113,8 @@ type Node struct {
 
 func (n Node) String() string {
 	switch n.Type {
-	case NodeNum:
-		return fmt.Sprintf("num(%d)", n.Num)
+	case NodeVal:
+		return fmt.Sprintf("val(%v)", n.Val)
 	case NodeAdd:
 		return fmt.Sprintf("add(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeSub:
@@ -181,12 +181,12 @@ func NewBinNode(tokenPos *TokenPos, typ NodeType, lhs, rhs *Node) *Node {
 	}
 }
 
-// NewNumNode dummy
-func NewNumNode(tokenPos *TokenPos, num int) *Node {
+// NewValNode dummy
+func NewValNode(tokenPos *TokenPos, val *Val) *Node {
 	return &Node{
 		TokenPos: tokenPos,
-		Type:     NodeNum,
-		Num:      num,
+		Type:     NodeVal,
+		Val:      val,
 	}
 }
 

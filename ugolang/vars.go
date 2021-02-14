@@ -1,9 +1,9 @@
 package ugolang
 
 // VarsType dummy
-type VarsType map[string]int
+type VarsType map[string]*Val
 
-var globalVars VarsType = map[string]int{}
+var globalVars VarsType = map[string]*Val{}
 
 // NestedVarsType dummy
 type NestedVarsType struct {
@@ -22,15 +22,18 @@ func NewNestedVars(depth int) *NestedVarsType {
 }
 
 // Get dummy
-func (v NestedVarsType) Get(name string) int {
+func (v NestedVarsType) Get(name string) *Val {
 	if val, ok := (*v.locals)[name]; ok {
 		return val
 	}
-	return (*v.globals)[name]
+	if val, ok := (*v.globals)[name]; ok {
+		return val
+	}
+	return NewNumVal(0)
 }
 
 // Set dummy
-func (v NestedVarsType) Set(name string, val int) {
+func (v NestedVarsType) Set(name string, val *Val) {
 	if v.depth == 0 {
 		(*v.globals)[name] = val
 	} else {

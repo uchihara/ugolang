@@ -246,8 +246,8 @@ func TestUgolang(t *testing.T) {
 		if (err != nil) != tt.wantError {
 			t.Errorf("%s expect error is %v but got %s", tt.code, tt.wantError, err)
 		}
-		if actual != tt.want {
-			t.Errorf("%s expect %d but got %d", tt.code, tt.want, actual)
+		if err == nil && actual.Num != tt.want {
+			t.Errorf("%s expect %d but got %v", tt.code, tt.want, actual)
 		}
 	}
 }

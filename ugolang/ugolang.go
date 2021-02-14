@@ -19,18 +19,18 @@ func NewUgolang() *Ugolang {
 var tokens []*Token
 
 // Exec dummy
-func (u *Ugolang) Exec(code string) (int, error) {
+func (u *Ugolang) Exec(code string) (*Val, error) {
 	var err error
 	tokens, err = tokenize(code)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if u.DumpTokens {
 		fmt.Printf("tokens: %v\n", tokens)
 	}
 	nodes, err := prog()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if u.DumpNodes {
