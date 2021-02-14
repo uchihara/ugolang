@@ -116,6 +116,9 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 			r, _ := eval(param)
 			vals = append(vals, r)
 		}
+		if fn.IsNative {
+			return fn.CallNative(funcName, vals), 0
+		}
 		funcStack.push(funcName)
 		fp := funcStack.peek()
 		for i, val := range vals {
