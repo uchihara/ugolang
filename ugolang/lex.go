@@ -135,21 +135,30 @@ func tokenize(code string) ([]*Token, error) {
 	tokens := make([]*Token, 0)
 	for pos < len(code) {
 		c := code[pos]
+		if c == ' ' || c == '\t' {
+			pos++
+			col++
+			continue
+		}
+
 		if c == '\n' {
 			line++
+			pos++
 			col = 1
+			continue
+		}
+
+		if c == ';' {
+			pos++
+			col++
+			tokens = append(tokens, NewToken(line, col, TokenEOL))
+			continue
 		}
 
 		if matchLen, matched, token := matchTokens(tokenPairs, code[pos:len(code)]); matched {
 			tokens = append(tokens, NewToken(line, col, token))
 			pos += matchLen
 			col += matchLen
-			continue
-		}
-
-		if c == ' ' {
-			pos++
-			col++
 			continue
 		}
 
@@ -187,13 +196,6 @@ func tokenize(code string) ([]*Token, error) {
 			tokens = append(tokens, NewValToken(line, col, NewStrVal(str)))
 			pos += matchLen
 			col += matchLen
-			continue
-		}
-
-		if c == ';' {
-			tokens = append(tokens, NewToken(line, col, TokenEOL))
-			pos++
-			col++
 			continue
 		}
 
