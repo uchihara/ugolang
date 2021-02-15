@@ -20,6 +20,8 @@ var tokens []*Token
 
 // Exec dummy
 func (u *Ugolang) Exec(code string) (*Val, error) {
+	InitFuncs()
+
 	var err error
 	tokens, err = tokenize(code)
 	if err != nil {

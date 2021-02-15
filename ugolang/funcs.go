@@ -6,20 +6,26 @@ import (
 
 // FuncType dummy
 type FuncType struct {
-	IsNative   bool
 	Name       string
 	Args       []string
 	Body       *Node
+	IsNative   bool
 	nativeFunc func(args []interface{}) *Val
 }
 
 type funcMap map[string]FuncType
 
-var funcs funcMap = funcMap{
-	"printf": {
-		Name:     "printf",
-		IsNative: true,
-		nativeFunc: func(args []interface{}) *Val {
+var funcs funcMap
+
+type nativeFunc struct {
+	name string
+	fn   func([]interface{}) *Val
+}
+
+var nativeFuncs = []nativeFunc{
+	{
+		name: "printf",
+		fn: func(args []interface{}) *Val {
 			if len(args) == 0 {
 				return NewNumVal(0)
 			}
@@ -35,10 +41,9 @@ var funcs funcMap = funcMap{
 			return NewNumVal(0)
 		},
 	},
-	"sprintf": {
-		Name:     "sprintf",
-		IsNative: true,
-		nativeFunc: func(args []interface{}) *Val {
+	{
+		name: "sprintf",
+		fn: func(args []interface{}) *Val {
 			if len(args) == 0 {
 				return NewStrVal("")
 			}
@@ -54,6 +59,18 @@ var funcs funcMap = funcMap{
 			return NewStrVal(r)
 		},
 	},
+}
+
+// InitFuncs dummy
+func InitFuncs() {
+	funcs = funcMap{}
+	for _, nativeFunc := range nativeFuncs {
+		funcs[nativeFunc.name] = FuncType{
+			IsNative:   true,
+			Name:       nativeFunc.name,
+			nativeFunc: nativeFunc.fn,
+		}
+	}
 }
 
 // CallNative dummy
