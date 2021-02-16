@@ -27,7 +27,11 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 	case NodeVal:
 		ret, nodeType = node.Val, 0
 	case NodeDefVar:
-		funcStack.peek().vars.Define(node.Ident)
+		val := NewNumVal(0)
+		if node.RHS != nil {
+			val, _ = eval(node.RHS)
+		}
+		funcStack.peek().vars.Set(node.Ident, val)
 		ret, nodeType = NewNumVal(0), 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)

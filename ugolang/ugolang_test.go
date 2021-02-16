@@ -300,6 +300,14 @@ fizz
 fizzbuzz
 `),
 		},
+		{
+			code: "func main() { var a = 1; a; }",
+			want: NewNumVal(1),
+		},
+		{
+			code: "var b = 1; func main() { var a = 2; a+b; }",
+			want: NewNumVal(3),
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()

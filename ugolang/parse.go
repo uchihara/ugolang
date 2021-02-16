@@ -485,11 +485,20 @@ end:
 func varStmt(varToken *Token) (node *Node, err error) {
 	dprintf("var start\n")
 	var ident string
+	var rhs *Node
 	_, ident, err = expectIdent()
 	if err != nil {
 		goto end
 	}
-	node = NewDefVarNode(varToken.Pos(), ident)
+	if _, ok := consumeSign("="); ok {
+		rhs, err = expr()
+		if err != nil {
+			goto end
+		}
+	}
+
+	node = NewDefVarNode(varToken.Pos(), ident, rhs)
+
 	err = expect(TokenEOL)
 	if err != nil {
 		goto end

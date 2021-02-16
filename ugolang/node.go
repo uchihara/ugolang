@@ -197,11 +197,12 @@ func NewValNode(tokenPos *TokenPos, val *Val) *Node {
 }
 
 // NewDefVarNode dummy
-func NewDefVarNode(tokenPos *TokenPos, ident string) *Node {
+func NewDefVarNode(tokenPos *TokenPos, ident string, rhs *Node) *Node {
 	return &Node{
 		TokenPos: tokenPos,
 		Type:     NodeDefVar,
 		Ident:    ident,
+		RHS:      rhs,
 	}
 }
 
