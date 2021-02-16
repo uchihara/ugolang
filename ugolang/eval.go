@@ -6,6 +6,9 @@ import (
 
 // Eval dummy
 func Eval(nodes []*Node) *Val {
+	InitFuncs()
+	funcStack.reset()
+	funcStack.push("main")
 	var ret *Val
 	for _, node := range nodes {
 		dprintf("node=%v\n", node)
@@ -23,6 +26,9 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 	switch node.Type {
 	case NodeVal:
 		ret, nodeType = node.Val, 0
+	case NodeDefVar:
+		funcStack.peek().vars.Define(node.Ident)
+		ret, nodeType = NewNumVal(0), 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
@@ -72,6 +78,10 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		funcStack.peek().vars.Set(node.LHS.Ident, val)
 		ret, nodeType = val, 0
 	case NodeVar:
+		// bug check
+		if !funcStack.peek().vars.Defined(node.Ident) {
+			panic(fmt.Sprintf("fatal: undefined var %s found", node.Ident))
+		}
 		ret, nodeType = funcStack.peek().vars.Get(node.Ident), 0
 	case NodeIf:
 		cond, _ := eval(node.Cond)

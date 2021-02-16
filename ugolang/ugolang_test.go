@@ -24,15 +24,15 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { a; }",
+			code: "func main() { var a; a; }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { a=1; }",
+			code: "func main() { var a; a=1; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { a=1;a+2; }",
+			code: "func main() { var a; a=1;a+2; }",
 			want: NewNumVal(3),
 		},
 		{
@@ -60,11 +60,11 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { a=0;if a { 1; } }",
+			code: "func main() { var a; a=0;if a { 1; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { a=2;if a { 1; } }",
+			code: "func main() { var a; a=2;if a { 1; } }",
 			want: NewNumVal(1),
 		},
 		{
@@ -76,15 +76,15 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { a=1; if a { b=1; } else { b=2; } a+b; }",
+			code: "func main() { var a; var b; a=1; if a { b=1; } else { b=2; } a+b; }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { a=0; if a { b=1; } else { b=2; } a+b; }",
+			code: "func main() { var a; var b; a=0; if a { b=1; } else { b=2; } a+b; }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { a=0;if a{b=1;}else{b=2;}a+b; }",
+			code: "func main() { var a; var b; a=0;if a{b=1;}else{b=2;}a+b; }",
 			want: NewNumVal(2),
 		},
 		{
@@ -96,11 +96,11 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { a=1; if a == 1 { 2; } else { 3; } }",
+			code: "func main() { var a; a=1; if a == 1 { 2; } else { 3; } }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { a=0; if a == 1 { 2; } else { 3; } }",
+			code: "func main() { var a; a=0; if a == 1 { 2; } else { 3; } }",
 			want: NewNumVal(3),
 		},
 		{
@@ -136,11 +136,11 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { a=0; while a<2 { a=a+1; } a+1; }",
+			code: "func main() { var a; a=0; while a<2 { a=a+1; } a+1; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { aaa=1;b_=2;c123=3;aaa+b_+c123; }",
+			code: "func main() { var aaa; var b_; var c123; aaa=1;b_=2;c123=3;aaa+b_+c123; }",
 			want: NewNumVal(6),
 		},
 		{
@@ -168,11 +168,11 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(2),
 		},
 		{
-			code: "func foo() { a=2; } func main() { a=1; foo(); a; }",
+			code: "func foo() { var a; a=2; } func main() { var a; a=1; foo(); a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { return a; } func main() { a=1; foo(); }",
+			code: "func foo() { var a; return a; } func main() { var a; a=1; foo(); }",
 			want: NewNumVal(0),
 		},
 		{
@@ -228,20 +228,21 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(8),
 		},
 		{
-			code: "a=1; func foo(a) { bar(a+1); } func bar(b) { a+b; } func main() { a=2; foo(a); }",
+			code: "var a; a=1; func foo(a) { bar(a+1); } func bar(b) { a+b; } func main() { var a; a=2; foo(a); }",
 			want: NewNumVal(4),
 		},
 		{
-			code: "func main() { a=0; while 1 { if a == 1 { break; } a=a+1; } a; }",
+			code: "func main() { var a; a=0; while 1 { if a == 1 { break; } a=a+1; } a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { a=0; while 1 { if a == 2 { break; } a=a+1; continue; a=a+10; } a; }",
+			code: "func main() { var a; a=0; while 1 { if a == 2 { break; } a=a+1; continue; a=a+10; } a; }",
 			want: NewNumVal(2),
 		},
 		{
 			code: `
 func main() {
+	var a;
 	a = 0;
 	while a < 2 {
 		a = a + 1;
@@ -260,9 +261,12 @@ func mod(a, b) {
 	return a;
 }
 func main() {
+	var s;
 	s = "";
+	var i;
 	i = 1;
 	while i <= 15 {
+		var s2;
 		s2 = "";
 		if mod(i, 3) == 0 {
 			s2 = s2 + "fizz";

@@ -10,6 +10,8 @@ type NodeType int
 const (
 	// NodeVal dummy
 	NodeVal NodeType = iota + 1
+	// NodeDefVar dummy
+	NodeDefVar
 	// NodeAdd dummy
 	NodeAdd
 	// NodeSub dummy
@@ -52,6 +54,8 @@ func (n NodeType) String() string {
 	switch n {
 	case NodeVal:
 		return "val"
+	case NodeDefVar:
+		return "defvar"
 	case NodeAdd:
 		return "add"
 	case NodeSub:
@@ -115,6 +119,8 @@ func (n Node) String() string {
 	switch n.Type {
 	case NodeVal:
 		return fmt.Sprintf("val(%v)", n.Val)
+	case NodeDefVar:
+		return fmt.Sprintf("defvar(%s)", n.Ident)
 	case NodeAdd:
 		return fmt.Sprintf("add(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeSub:
@@ -187,6 +193,15 @@ func NewValNode(tokenPos *TokenPos, val *Val) *Node {
 		TokenPos: tokenPos,
 		Type:     NodeVal,
 		Val:      val,
+	}
+}
+
+// NewDefVarNode dummy
+func NewDefVarNode(tokenPos *TokenPos, ident string) *Node {
+	return &Node{
+		TokenPos: tokenPos,
+		Type:     NodeDefVar,
+		Ident:    ident,
 	}
 }
 

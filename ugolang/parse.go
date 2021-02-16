@@ -64,6 +64,10 @@ func expectIdent() (*Token, string, error) {
 }
 
 func prog() ([]*Node, error) {
+	InitFuncs()
+	funcStack.reset()
+	funcStack.push("main")
+
 	nodes := make([]*Node, 0)
 	for len(tokens) > 0 {
 		node, ok, err := funcStmt()
@@ -79,7 +83,6 @@ func prog() ([]*Node, error) {
 		nodes = append(nodes, node)
 	}
 	nodes = append(nodes, NewCallNode(nil, "main", []*Node{}))
-	funcStack.push("main")
 	return nodes, nil
 }
 
@@ -92,6 +95,9 @@ func funcStmt() (node *Node, ok bool, err error) {
 	if !isFunc {
 		goto end
 	}
+
+	funcStack.push(ident)
+
 	_, ident, err = expectIdent()
 	if err != nil {
 		goto end
@@ -106,6 +112,8 @@ func funcStmt() (node *Node, ok bool, err error) {
 	}
 	node = NewFuncNode(token.Pos(), ident, argss, blockNode)
 	ok = true
+
+	funcStack.pop()
 end:
 	dprintf("func end\n")
 	return node, ok, err
@@ -130,10 +138,16 @@ func args() (args []string, err error) {
 				goto end
 			}
 		}
-		_, ident, err = expectIdent()
+		var token *Token
+		token, ident, err = expectIdent()
 		if err != nil {
 			goto end
 		}
+		if funcStack.peek().vars.DefinedLocally(ident) {
+			err = NewCompileError(token.Pos(), fmt.Sprintf("redeclared variable found: %s", ident))
+			goto end
+		}
+		funcStack.peek().vars.Define(ident)
 		args = append(args, ident)
 	}
 end:
@@ -197,6 +211,10 @@ end:
 
 func stmt() (node *Node, err error) {
 	dprintf("stmt start\n")
+	if token, ok := consume(TokenVar); ok {
+		node, err = varStmt(token)
+		goto end
+	}
 	if token, ok := consume(TokenReturn); ok {
 		var exprNode *Node
 		exprNode, err = expr()
@@ -428,6 +446,10 @@ func pri() (node *Node, err error) {
 			goto end
 		}
 
+		if !funcStack.peek().vars.Defined(ident) {
+			err = NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", ident))
+			goto end
+		}
 		node = NewVarNode(token.Pos(), ident)
 		goto end
 	}
@@ -457,6 +479,24 @@ func val() (node *Node, err error) {
 	node = NewValNode(token.Pos(), token.Val)
 end:
 	dprintf("val end\n")
+	return node, err
+}
+
+func varStmt(varToken *Token) (node *Node, err error) {
+	dprintf("var start\n")
+	var ident string
+	_, ident, err = expectIdent()
+	if err != nil {
+		goto end
+	}
+	node = NewDefVarNode(varToken.Pos(), ident)
+	err = expect(TokenEOL)
+	if err != nil {
+		goto end
+	}
+	funcStack.peek().vars.Define(ident)
+end:
+	dprintf("var end\n")
 	return node, err
 }
 

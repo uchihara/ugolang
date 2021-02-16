@@ -10,6 +10,8 @@ type TokenType int
 const (
 	// TokenVal dummmy
 	TokenVal TokenType = iota + 1
+	// TokenVar dummy
+	TokenVar
 	// TokenSign dummmy
 	TokenSign
 	// TokenIdent dummmy
@@ -36,6 +38,8 @@ func (t TokenType) String() string {
 	switch t {
 	case TokenVal:
 		return "valToken"
+	case TokenVar:
+		return "varToken"
 	case TokenSign:
 		return "signToken"
 	case TokenIdent:
@@ -110,6 +114,8 @@ func (t *Token) String() string {
 	switch t.Type {
 	case TokenVal:
 		return fmt.Sprintf("val(%v)", t.Val)
+	case TokenVar:
+		return fmt.Sprintf("var")
 	case TokenSign:
 		return fmt.Sprintf("sign(%s)", t.Sign)
 	case TokenIdent:
@@ -149,6 +155,15 @@ func NewValToken(line, column int, val *Val) *Token {
 		pos:  NewTokenPos(line, column),
 		Type: TokenVal,
 		Val:  val,
+	}
+}
+
+// NewVarToken dummy
+func NewVarToken(line, column int, ident string) *Token {
+	return &Token{
+		pos:   NewTokenPos(line, column),
+		Type:  TokenVar,
+		Ident: ident,
 	}
 }
 

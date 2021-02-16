@@ -120,6 +120,7 @@ func matchString(code string) (int, bool, string, error) {
 
 func tokenize(code string) ([]*Token, error) {
 	tokenPairs := []tokenPair{
+		{"var", TokenVar},
 		{"if", TokenIf},
 		{"else", TokenElse},
 		{"while", TokenWhile},
