@@ -22,8 +22,6 @@ const (
 	TokenWhile
 	// TokenFunc dummy
 	TokenFunc
-	// TokenCall dummy
-	TokenCall
 	// TokenReturn dummy
 	TokenReturn
 	// TokenBreak dummy
@@ -48,8 +46,6 @@ func (t TokenType) String() string {
 		return "whileToken"
 	case TokenFunc:
 		return "funcToken"
-	case TokenCall:
-		return "callToken"
 	case TokenReturn:
 		return "returnToken"
 	case TokenBreak:
@@ -126,8 +122,6 @@ func (t *Token) String() string {
 		return "while"
 	case TokenFunc:
 		return "func"
-	case TokenCall:
-		return "call"
 	case TokenReturn:
 		return "return"
 	case TokenBreak:

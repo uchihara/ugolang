@@ -143,10 +143,6 @@ end:
 
 func params() (params []*Node, err error) {
 	dprintf("params start\n")
-	_, err = expectSign("(")
-	if err != nil {
-		goto end
-	}
 	params = make([]*Node, 0)
 	for len(tokens) > 0 {
 		if _, ok := consumeSign(")"); ok {
@@ -412,19 +408,6 @@ func pri() (node *Node, err error) {
 	var ident string
 	var ok bool
 	var paramss []*Node
-	if token, ok = consume(TokenCall); ok {
-		_, ident, err = expectIdent()
-		if err != nil {
-			goto end
-		}
-		paramss, err = params()
-		if err != nil {
-			goto end
-		}
-		node = NewCallNode(token.Pos(), ident, paramss)
-		goto end
-	}
-
 	if token, ok = consumeSign("("); ok {
 		node, err = expr()
 		if err != nil {
@@ -436,6 +419,15 @@ func pri() (node *Node, err error) {
 
 	token, ident, ok = consumeIdent()
 	if ok {
+		if token, ok = consumeSign("("); ok {
+			paramss, err = params()
+			if err != nil {
+				goto end
+			}
+			node = NewCallNode(token.Pos(), ident, paramss)
+			goto end
+		}
+
 		node = NewVarNode(token.Pos(), ident)
 		goto end
 	}

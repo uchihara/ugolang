@@ -124,7 +124,6 @@ func tokenize(code string) ([]*Token, error) {
 		{"else", TokenElse},
 		{"while", TokenWhile},
 		{"func", TokenFunc},
-		{"call", TokenCall},
 		{"return", TokenReturn},
 		{"break", TokenBreak},
 		{"continue", TokenContinue},

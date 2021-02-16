@@ -152,39 +152,39 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(1158),
 		},
 		{
-			code: "func foo() { 1; } func main() { call foo(); }",
+			code: "func foo() { 1; } func main() { foo(); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { 1; } func main() { call foo() + 2; }",
+			code: "func foo() { 1; } func main() { foo() + 2; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func foo() { if 1 { return 1; } return 2; } func main() { call foo(); }",
+			code: "func foo() { if 1 { return 1; } return 2; } func main() { foo(); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { if 0 { return 1; } return 2; } func main() { call foo(); }",
+			code: "func foo() { if 0 { return 1; } return 2; } func main() { foo(); }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func foo() { a=2; } func main() { a=1; call foo(); a; }",
+			code: "func foo() { a=2; } func main() { a=1; foo(); a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { return a; } func main() { a=1; call foo(); }",
+			code: "func foo() { return a; } func main() { a=1; foo(); }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func foo(a) { a; } func main() { call foo(1); }",
+			code: "func foo(a) { a; } func main() { foo(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo(a, b) { a+b; } func main() { call foo(1, 2); }",
+			code: "func foo(a, b) { a+b; } func main() { foo(1, 2); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func foo(a) { call bar(a+1); } func bar(a) { a+1; } func main() { call foo(1); }",
+			code: "func foo(a) { bar(a+1); } func bar(a) { a+1; } func main() { foo(1); }",
 			want: NewNumVal(3),
 		},
 		{
@@ -200,35 +200,35 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(-1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(0); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(0); }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(1); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(2); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(2); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(3); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(3); }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(4); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(4); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(5); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(5); }",
 			want: NewNumVal(5),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { call fib(n-2) + call fib(n-1); } } func main() { call fib(6); }",
+			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(6); }",
 			want: NewNumVal(8),
 		},
 		{
-			code: "a=1; func foo(a) { call bar(a+1); } func bar(b) { a+b; } func main() { a=2; call foo(a); }",
+			code: "a=1; func foo(a) { bar(a+1); } func bar(b) { a+b; } func main() { a=2; foo(a); }",
 			want: NewNumVal(4),
 		},
 		{
@@ -264,14 +264,14 @@ func main() {
 	i = 1;
 	while i <= 15 {
 		s2 = "";
-		if call mod(i, 3) == 0 {
+		if mod(i, 3) == 0 {
 			s2 = s2 + "fizz";
 		}
-		if call mod(i, 5) == 0 {
+		if mod(i, 5) == 0 {
 			s2 = s2 + "buzz";
 		}
 		if s2 == "" {
-			s2 = s2 + call sprintf("%d", i);
+			s2 = s2 + sprintf("%d", i);
 		}
 		s = s + s2 + "\n";
 		i = i + 1;
