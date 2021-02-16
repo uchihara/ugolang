@@ -6,6 +6,7 @@ import (
 
 // Ugolang dummy
 type Ugolang struct {
+	Debug      bool
 	DumpTokens bool
 	DumpNodes  bool
 }
@@ -20,6 +21,8 @@ var tokens []*Token
 
 // Exec dummy
 func (u *Ugolang) Exec(code string) (*Val, error) {
+	debug = u.Debug
+
 	var err error
 	tokens, err = tokenize(code)
 	if err != nil {

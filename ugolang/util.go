@@ -6,6 +6,8 @@ import (
 	"runtime"
 )
 
+var debug bool
+
 type callerInfo struct {
 	funcName string
 	funcLine int
@@ -23,7 +25,7 @@ func caller() callerInfo {
 }
 
 func dprintf(f string, param ...interface{}) {
-	if true {
+	if !debug {
 		return
 	}
 	depth := 0

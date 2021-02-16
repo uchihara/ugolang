@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	var debug bool
+	flag.BoolVar(&debug, "debug", false, "debug")
 	var dumpTokens bool
 	flag.BoolVar(&dumpTokens, "tokens", false, "dump tokens")
 	var dumpNodes bool
@@ -24,6 +26,7 @@ func main() {
 	}
 
 	ugo := ugolang.NewUgolang()
+	ugo.Debug = debug
 	ugo.DumpTokens = dumpTokens
 	ugo.DumpNodes = dumpNodes
 	code := flag.Arg(0)
