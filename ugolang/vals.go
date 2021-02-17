@@ -14,6 +14,17 @@ const (
 	StrVal
 )
 
+func (v ValType) String() string {
+	switch v {
+	case NumVal:
+		return "numVal"
+	case StrVal:
+		return "strVal"
+	default:
+		panic(fmt.Sprintf("unknown valType: %d", v))
+	}
+}
+
 // Val dummy
 type Val struct {
 	Type ValType

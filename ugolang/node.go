@@ -102,6 +102,7 @@ type Node struct {
 	TokenPos   *TokenPos
 	Type       NodeType
 	Val        *Val
+	ValType    ValType
 	Ident      string
 	LHS        *Node
 	RHS        *Node
@@ -120,7 +121,7 @@ func (n Node) String() string {
 	case NodeVal:
 		return fmt.Sprintf("val(%v)", n.Val)
 	case NodeDefVar:
-		return fmt.Sprintf("defvar(%s)", n.Ident)
+		return fmt.Sprintf("defvar(%s, %v, %v)", n.Ident, n.ValType, n.RHS)
 	case NodeAdd:
 		return fmt.Sprintf("add(%s, %s)", n.LHS.String(), n.RHS.String())
 	case NodeSub:
@@ -197,11 +198,12 @@ func NewValNode(tokenPos *TokenPos, val *Val) *Node {
 }
 
 // NewDefVarNode dummy
-func NewDefVarNode(tokenPos *TokenPos, ident string, rhs *Node) *Node {
+func NewDefVarNode(tokenPos *TokenPos, ident string, valType ValType, rhs *Node) *Node {
 	return &Node{
 		TokenPos: tokenPos,
 		Type:     NodeDefVar,
 		Ident:    ident,
+		ValType:  valType,
 		RHS:      rhs,
 	}
 }

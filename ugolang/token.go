@@ -12,6 +12,8 @@ const (
 	TokenVal TokenType = iota + 1
 	// TokenVar dummy
 	TokenVar
+	// TokenValType dummy
+	TokenValType
 	// TokenSign dummmy
 	TokenSign
 	// TokenIdent dummmy
@@ -40,6 +42,8 @@ func (t TokenType) String() string {
 		return "valToken"
 	case TokenVar:
 		return "varToken"
+	case TokenValType:
+		return "valTypeToken"
 	case TokenSign:
 		return "signToken"
 	case TokenIdent:
@@ -95,11 +99,12 @@ func (p *TokenPos) Column() int {
 
 // Token dummy
 type Token struct {
-	pos   *TokenPos
-	Type  TokenType
-	Val   *Val
-	Sign  string
-	Ident string
+	pos     *TokenPos
+	Type    TokenType
+	Val     *Val
+	ValType ValType
+	Sign    string
+	Ident   string
 }
 
 // Pos dummy
@@ -116,6 +121,8 @@ func (t *Token) String() string {
 		return fmt.Sprintf("val(%v)", t.Val)
 	case TokenVar:
 		return fmt.Sprintf("var")
+	case TokenValType:
+		return fmt.Sprintf("valType(%v)", t.ValType)
 	case TokenSign:
 		return fmt.Sprintf("sign(%s)", t.Sign)
 	case TokenIdent:
@@ -164,6 +171,15 @@ func NewVarToken(line, column int, ident string) *Token {
 		pos:   NewTokenPos(line, column),
 		Type:  TokenVar,
 		Ident: ident,
+	}
+}
+
+// NewValTypeToken dummy
+func NewValTypeToken(line, column int, valType ValType) *Token {
+	return &Token{
+		pos:     NewTokenPos(line, column),
+		Type:    TokenValType,
+		ValType: valType,
 	}
 }
 

@@ -55,6 +55,14 @@ func expectSign(sign string) (*Token, error) {
 	return token, nil
 }
 
+func expectValType() (*Token, error) {
+	token, ok := consume(TokenValType)
+	if !ok {
+		return nil, NewCompileError(token.Pos(), fmt.Sprintf("%v expect valType but got %v", caller(), tokens[0]))
+	}
+	return token, nil
+}
+
 func expectIdent() (*Token, string, error) {
 	token, ident, ok := consumeIdent()
 	if !ok {
@@ -486,7 +494,13 @@ func varStmt(varToken *Token) (node *Node, err error) {
 	dprintf("var start\n")
 	var ident string
 	var rhs *Node
+	var valTypeToken *Token
+	_ = valTypeToken // FIXME
 	_, ident, err = expectIdent()
+	if err != nil {
+		goto end
+	}
+	valTypeToken, err = expectValType()
 	if err != nil {
 		goto end
 	}
@@ -497,7 +511,7 @@ func varStmt(varToken *Token) (node *Node, err error) {
 		}
 	}
 
-	node = NewDefVarNode(varToken.Pos(), ident, rhs)
+	node = NewDefVarNode(varToken.Pos(), ident, valTypeToken.ValType, rhs)
 
 	err = expect(TokenEOL)
 	if err != nil {

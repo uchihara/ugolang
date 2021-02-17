@@ -121,6 +121,8 @@ func matchString(code string) (int, bool, string, error) {
 func tokenize(code string) ([]*Token, error) {
 	tokenPairs := []tokenPair{
 		{"var", func(line, col int) *Token { return NewToken(line, col, TokenVar) }},
+		{"int", func(line, col int) *Token { return NewValTypeToken(line, col, NumVal) }},
+		{"string", func(line, col int) *Token { return NewValTypeToken(line, col, StrVal) }},
 		{"if", func(line, col int) *Token { return NewToken(line, col, TokenIf) }},
 		{"else", func(line, col int) *Token { return NewToken(line, col, TokenElse) }},
 		{"while", func(line, col int) *Token { return NewToken(line, col, TokenWhile) }},
