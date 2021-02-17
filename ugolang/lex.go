@@ -26,13 +26,13 @@ func matchToken(token, code string) (int, bool) {
 
 type tokenPair struct {
 	keyword string
-	token   TokenType
+	fn      func(line, col int) *Token
 }
 
-func matchTokens(tokenPairs []tokenPair, code string) (int, bool, TokenType) {
-	for _, tokenPair := range tokenPairs {
+func matchTokens(tokenPairs []tokenPair, code string) (int, bool, int) {
+	for idx, tokenPair := range tokenPairs {
 		if matchLen, matched := matchToken(tokenPair.keyword, code); matched {
-			return matchLen, matched, tokenPair.token
+			return matchLen, matched, idx
 		}
 	}
 	return 0, false, 0
@@ -120,14 +120,14 @@ func matchString(code string) (int, bool, string, error) {
 
 func tokenize(code string) ([]*Token, error) {
 	tokenPairs := []tokenPair{
-		{"var", TokenVar},
-		{"if", TokenIf},
-		{"else", TokenElse},
-		{"while", TokenWhile},
-		{"func", TokenFunc},
-		{"return", TokenReturn},
-		{"break", TokenBreak},
-		{"continue", TokenContinue},
+		{"var", func(line, col int) *Token { return NewToken(line, col, TokenVar) }},
+		{"if", func(line, col int) *Token { return NewToken(line, col, TokenIf) }},
+		{"else", func(line, col int) *Token { return NewToken(line, col, TokenElse) }},
+		{"while", func(line, col int) *Token { return NewToken(line, col, TokenWhile) }},
+		{"func", func(line, col int) *Token { return NewToken(line, col, TokenFunc) }},
+		{"return", func(line, col int) *Token { return NewToken(line, col, TokenReturn) }},
+		{"break", func(line, col int) *Token { return NewToken(line, col, TokenBreak) }},
+		{"continue", func(line, col int) *Token { return NewToken(line, col, TokenContinue) }},
 	}
 	line := 1
 	col := 1
@@ -155,8 +155,9 @@ func tokenize(code string) ([]*Token, error) {
 			continue
 		}
 
-		if matchLen, matched, token := matchTokens(tokenPairs, code[pos:len(code)]); matched {
-			tokens = append(tokens, NewToken(line, col, token))
+		if matchLen, matched, matchedIdx := matchTokens(tokenPairs, code[pos:len(code)]); matched {
+			token := tokenPairs[matchedIdx].fn(line, col)
+			tokens = append(tokens, token)
 			pos += matchLen
 			col += matchLen
 			continue
