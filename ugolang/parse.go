@@ -71,6 +71,15 @@ func expectIdent() (*Token, string, error) {
 	return token, ident, nil
 }
 
+func sameValType(lhs, rhs *Node) bool {
+	l := EvalValType(lhs)
+	r := EvalValType(rhs)
+	if l == 0 || r == 0 || l != r {
+		return false
+	}
+	return true
+}
+
 func prog() ([]*Node, error) {
 	InitFuncs()
 	funcStack.reset()
@@ -97,7 +106,7 @@ func prog() ([]*Node, error) {
 func funcStmt() (node *Node, ok bool, err error) {
 	dprintf("func start\n")
 	var ident string
-	var argss []string
+	var argss []*Node
 	var valTypeToken *Token
 	var blockNode *Node
 	token, isFunc := consume(TokenFunc)
@@ -124,6 +133,7 @@ func funcStmt() (node *Node, ok bool, err error) {
 		goto end
 	}
 	node = NewFuncNode(token.Pos(), ident, argss, valTypeToken.ValType, blockNode)
+	funcs.Define(ident, argss, valTypeToken.ValType, blockNode)
 	ok = true
 
 	funcStack.pop()
@@ -132,13 +142,13 @@ end:
 	return node, ok, err
 }
 
-func args() (args []string, err error) {
+func args() (args []*Node, err error) {
 	dprintf("args start\n")
 	_, err = expectSign("(")
 	if err != nil {
 		goto end
 	}
-	args = make([]string, 0)
+	args = make([]*Node, 0)
 	for len(tokens) > 0 {
 		var ident string
 		var ok bool
@@ -152,16 +162,21 @@ func args() (args []string, err error) {
 			}
 		}
 		var token *Token
+		var valTypeToken *Token
 		token, ident, err = expectIdent()
 		if err != nil {
 			goto end
 		}
-		if funcStack.peek().vars.DefinedLocally(ident) {
+		valTypeToken, err = expectValType()
+		if err != nil {
+			goto end
+		}
+		if _, ok := funcStack.peek().vars.DefinedLocally(ident); ok {
 			err = NewCompileError(token.Pos(), fmt.Sprintf("redeclared variable found: %s", ident))
 			goto end
 		}
-		funcStack.peek().vars.Define(ident)
-		args = append(args, ident)
+		funcStack.peek().vars.Define(ident, valTypeToken.ValType)
+		args = append(args, NewVarNode(token.Pos(), ident))
 	}
 end:
 	dprintf("args end\n")
@@ -292,9 +307,23 @@ func assign() (node *Node, err error) {
 		goto end
 	}
 	if token, ok := consumeSign("="); ok {
+		if node.Type != NodeVar {
+			err = NewCompileError(token.Pos(), fmt.Sprintf("expect lhs var but got %v", node.Type))
+			goto end
+		}
+
+		valType, ok := funcStack.peek().vars.Defined(node.Ident)
+		if !ok {
+			err = NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", node.Ident))
+			goto end
+		}
 		var assignNode *Node
 		assignNode, err = assign()
 		if err != nil {
+			goto end
+		}
+		if EvalValType(assignNode) != valType {
+			err = NewCompileError(token.Pos(), fmt.Sprintf("expect valType of %v but got %v", assignNode, valType))
 			goto end
 		}
 		node = NewBinNode(token.Pos(), NodeAssign, node, assignNode)
@@ -390,11 +419,19 @@ func add() (node *Node, err error) {
 			if err != nil {
 				goto end
 			}
+			if !sameValType(node, rhs) {
+				err = NewCompileError(token.Pos(), fmt.Sprintf("type missmatch %v and %v", node, rhs))
+				goto end
+			}
 			node = NewBinNode(token.Pos(), NodeAdd, node, rhs)
 			dprintf("add rhs: %v\n", node)
 		} else if token, ok := consumeSign("-"); ok {
 			rhs, err = mul()
 			if err != nil {
+				goto end
+			}
+			if !sameValType(node, rhs) {
+				err = NewCompileError(token.Pos(), fmt.Sprintf("type missmatch %v and %v", node, rhs))
 				goto end
 			}
 			node = NewBinNode(token.Pos(), NodeSub, node, rhs)
@@ -420,6 +457,10 @@ func mul() (node *Node, err error) {
 		if token, ok := consumeSign("*"); ok {
 			rhs, err = pri()
 			if err != nil {
+				goto end
+			}
+			if !sameValType(node, rhs) {
+				err = NewCompileError(token.Pos(), fmt.Sprintf("type missmatch %v and %v", node, rhs))
 				goto end
 			}
 			node = NewBinNode(token.Pos(), NodeMul, node, rhs)
@@ -451,6 +492,10 @@ func pri() (node *Node, err error) {
 	token, ident, ok = consumeIdent()
 	if ok {
 		if token, ok = consumeSign("("); ok {
+			if ok := funcs.Defined(ident); !ok {
+				err = NewCompileError(token.Pos(), fmt.Sprintf("undefined function called: %s", ident))
+				goto end
+			}
 			paramss, err = params()
 			if err != nil {
 				goto end
@@ -459,7 +504,7 @@ func pri() (node *Node, err error) {
 			goto end
 		}
 
-		if !funcStack.peek().vars.Defined(ident) {
+		if _, ok := funcStack.peek().vars.Defined(ident); !ok {
 			err = NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", ident))
 			goto end
 		}
@@ -514,6 +559,11 @@ func varStmt(varToken *Token) (node *Node, err error) {
 		if err != nil {
 			goto end
 		}
+
+		if EvalValType(rhs) != valTypeToken.ValType {
+			err = NewCompileError(valTypeToken.Pos(), fmt.Sprintf("type missmatch for %s expect %v got got %v", ident, valTypeToken.ValType, EvalValType(rhs)))
+			goto end
+		}
 	}
 
 	node = NewDefVarNode(varToken.Pos(), ident, valTypeToken.ValType, rhs)
@@ -522,7 +572,7 @@ func varStmt(varToken *Token) (node *Node, err error) {
 	if err != nil {
 		goto end
 	}
-	funcStack.peek().vars.Define(ident)
+	funcStack.peek().vars.Define(ident, valTypeToken.ValType)
 end:
 	dprintf("var end\n")
 	return node, err

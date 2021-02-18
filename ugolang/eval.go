@@ -27,12 +27,12 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 	case NodeVal:
 		ret, nodeType = node.Val, 0
 	case NodeDefVar:
-		val := NewNumVal(0)
+		val := NewDefaultVal(node.ValType)
 		if node.RHS != nil {
 			val, _ = eval(node.RHS)
 		}
 		funcStack.peek().vars.Set(node.Ident, val)
-		ret, nodeType = NewNumVal(0), 0
+		ret, nodeType = NewDefaultVal(node.ValType), 0
 	case NodeAdd:
 		l, _ := eval(node.LHS)
 		r, _ := eval(node.RHS)
@@ -83,7 +83,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		ret, nodeType = val, 0
 	case NodeVar:
 		// bug check
-		if !funcStack.peek().vars.Defined(node.Ident) {
+		if _, ok := funcStack.peek().vars.Defined(node.Ident); !ok {
 			panic(fmt.Sprintf("fatal: undefined var %s found", node.Ident))
 		}
 		ret, nodeType = funcStack.peek().vars.Get(node.Ident), 0
@@ -136,8 +136,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		funcStack.push(funcName)
 		fp := funcStack.peek()
 		for i, val := range vals {
-			argName := fn.Args[i]
-			fp.vars.Set(argName, val)
+			fp.vars.Set(fn.Args[i].Ident, val)
 		}
 		body := fn.Body
 		r, _ := eval(body)
@@ -168,4 +167,35 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 end:
 	dprintf("eval end,  nodeType: %v, ret: %v, new nodeType: %v\n", node.Type, ret, nodeType)
 	return ret, nodeType
+}
+
+// EvalValType dummy
+func EvalValType(node *Node) ValType {
+	switch node.Type {
+	case NodeVar:
+		valType, ok := funcStack.peek().vars.Defined(node.Ident)
+		if !ok {
+			panic(fmt.Sprintf("invalid state var %s is not defined", node.Ident))
+		}
+		return valType
+	case NodeVal:
+		return node.Val.Type
+	case NodeAdd, NodeSub, NodeMul:
+		l := EvalValType(node.LHS)
+		r := EvalValType(node.RHS)
+		if l != r {
+			return 0
+		}
+		return l
+	case NodeAssign:
+		return EvalValType(node.RHS)
+	case NodeCall:
+		funcType, ok := funcs.Lookup(node.Ident)
+		if !ok {
+			panic(fmt.Sprintf("invalid state func %s is not defined", node.Ident))
+		}
+		return funcType.RetValType
+	default:
+		return 0
+	}
 }

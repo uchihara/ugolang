@@ -1,6 +1,7 @@
 package ugolang
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -176,15 +177,15 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(0),
 		},
 		{
-			code: "func foo(a) int { a; } func main() int { foo(1); }",
+			code: "func foo(a int) int { a; } func main() int { foo(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo(a, b) int { a+b; } func main() int { foo(1, 2); }",
+			code: "func foo(a int, b int) int { a+b; } func main() int { foo(1, 2); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func foo(a) int { bar(a+1); } func bar(a) int { a+1; } func main() int { foo(1); }",
+			code: "func foo(a int) int { bar(a+1); } func bar(a int) int { a+1; } func main() int { foo(1); }",
 			want: NewNumVal(3),
 		},
 		{
@@ -200,35 +201,35 @@ func TestUgolang(t *testing.T) {
 			want: NewNumVal(-1),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(0); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(0); }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(1); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(2); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(2); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(3); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(3); }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(4); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(4); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(5); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(5); }",
 			want: NewNumVal(5),
 		},
 		{
-			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(6); }",
+			code: "func fib(n int) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(6); }",
 			want: NewNumVal(8),
 		},
 		{
-			code: "var a int; a=1; func foo(a) int { bar(a+1); } func bar(b) int { a+b; } func main() int { var a int; a=2; foo(a); }",
+			code: "var a int; a=1; func foo(a int) int { bar(a+1); } func bar(b int) int { a+b; } func main() int { var a int; a=2; foo(a); }",
 			want: NewNumVal(4),
 		},
 		{
@@ -254,7 +255,7 @@ func main() int {
 		},
 		{
 			code: `
-func mod(a, b) int {
+func mod(a int, b int) int {
 	while a - b >= 0 {
 		a = a - b;
 	}
@@ -308,9 +309,48 @@ fizzbuzz
 			code: "var b int = 1; func main() int { var a int = 2; a+b; }",
 			want: NewNumVal(3),
 		},
+		{
+			code:      `func main() int { var a int = "1"; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { var a string = 1; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { var a int; a = "1"; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { var a string; a = 1; }`,
+			wantError: true,
+		},
+		{
+			code:      `var a int = "1"; func main() int { a; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { 1+"a"; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { var a string; 1+a; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { var a string = 1+"a"; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { foo(); }`,
+			wantError: true,
+		},
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
+		if !strings.Contains(tt.code, "func mod") {
+			continue
+		}
 		actual, err := ugo.Exec(tt.code)
 		if (err != nil) != tt.wantError {
 			t.Errorf("%s expect error is %v but got %s", tt.code, tt.wantError, err)

@@ -46,23 +46,31 @@ func (v NestedVarsType) Set(name string, val *Val) {
 }
 
 // Define dummy
-func (v NestedVarsType) Define(name string) {
-	v.Set(name, NewNumVal(0))
+func (v NestedVarsType) Define(name string, valType ValType) {
+	v.Set(name, NewDefaultVal(valType))
 }
 
 // Defined dummy
-func (v NestedVarsType) Defined(name string) bool {
-	if ok := v.DefinedLocally(name); ok {
-		return ok
+func (v NestedVarsType) Defined(name string) (ValType, bool) {
+	if valType, ok := v.DefinedLocally(name); ok {
+		return valType, ok
 	}
-	_, ok := (*v.globals)[name]
-	dprintf("defined globally %s %v\n", name, ok)
-	return ok
+	val, ok := (*v.globals)[name]
+	dprintf("defined globally %s %v %v\n", name, ok, val)
+	var valType ValType
+	if ok {
+		valType = val.Type
+	}
+	return valType, ok
 }
 
 // DefinedLocally dummy
-func (v NestedVarsType) DefinedLocally(name string) bool {
-	_, ok := (*v.locals)[name]
-	dprintf("defined locally %s %v\n", name, ok)
-	return ok
+func (v NestedVarsType) DefinedLocally(name string) (ValType, bool) {
+	val, ok := (*v.locals)[name]
+	dprintf("defined locally %s %v %v\n", name, ok, val)
+	var valType ValType
+	if ok {
+		valType = val.Type
+	}
+	return valType, ok
 }

@@ -112,7 +112,7 @@ type Node struct {
 	Body       *Node
 	Expr       *Node
 	Statements []*Node
-	Args       []string
+	Args       []*Node
 	Params     []*Node
 }
 
@@ -239,7 +239,7 @@ func NewWhileNode(tokenPos *TokenPos, condNode, bodyNode *Node) *Node {
 }
 
 // NewFuncNode dummy
-func NewFuncNode(tokenPos *TokenPos, name string, args []string, retValType ValType, bodyNode *Node) *Node {
+func NewFuncNode(tokenPos *TokenPos, name string, args []*Node, retValType ValType, bodyNode *Node) *Node {
 	return &Node{
 		TokenPos: tokenPos,
 		Type:     NodeFunc,

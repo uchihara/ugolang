@@ -7,7 +7,7 @@ import (
 // FuncType dummy
 type FuncType struct {
 	Name       string
-	Args       []string
+	Args       []*Node
 	RetValType ValType
 	Body       *Node
 	IsNative   bool
@@ -46,7 +46,7 @@ var nativeFuncs = []nativeFunc{
 	},
 	{
 		name:       "sprintf",
-		retValType: NumVal,
+		retValType: StrVal,
 		fn: func(args []interface{}) *Val {
 			if len(args) == 0 {
 				return NewStrVal("")
@@ -92,7 +92,7 @@ func (f FuncType) CallNative(name string, vals []*Val) *Val {
 	return fn.nativeFunc(params)
 }
 
-func (f funcMap) Define(name string, args []string, retValType ValType, body *Node) {
+func (f funcMap) Define(name string, args []*Node, retValType ValType, body *Node) {
 	f[name] = FuncType{
 		Name:       name,
 		Args:       args,

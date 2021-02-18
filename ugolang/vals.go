@@ -21,7 +21,7 @@ func (v ValType) String() string {
 	case StrVal:
 		return "strVal"
 	default:
-		panic(fmt.Sprintf("unknown valType: %d", v))
+		return fmt.Sprintf("unknown valType: %d", v)
 	}
 }
 
@@ -46,6 +46,14 @@ func NewStrVal(str string) *Val {
 		Type: StrVal,
 		Str:  str,
 	}
+}
+
+// NewDefaultVal dummy
+func NewDefaultVal(valType ValType) *Val {
+	if valType == StrVal {
+		return NewStrVal("")
+	}
+	return NewNumVal(0)
 }
 
 func (v Val) String() string {
