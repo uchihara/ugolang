@@ -239,12 +239,13 @@ func NewWhileNode(tokenPos *TokenPos, condNode, bodyNode *Node) *Node {
 }
 
 // NewFuncNode dummy
-func NewFuncNode(tokenPos *TokenPos, name string, args []string, bodyNode *Node) *Node {
+func NewFuncNode(tokenPos *TokenPos, name string, args []string, retValType ValType, bodyNode *Node) *Node {
 	return &Node{
 		TokenPos: tokenPos,
 		Type:     NodeFunc,
 		Ident:    name,
 		Args:     args,
+		ValType:  retValType,
 		Body:     bodyNode,
 	}
 }

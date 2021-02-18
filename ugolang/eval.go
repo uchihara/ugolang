@@ -117,7 +117,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		}
 	case NodeFunc:
 		funcName := node.Ident
-		funcs.Define(funcName, node.Args, node.Body)
+		funcs.Define(funcName, node.Args, node.ValType, node.Body)
 		ret, nodeType = NewNumVal(0), 0
 	case NodeCall:
 		funcName := node.Ident

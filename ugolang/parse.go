@@ -98,6 +98,7 @@ func funcStmt() (node *Node, ok bool, err error) {
 	dprintf("func start\n")
 	var ident string
 	var argss []string
+	var valTypeToken *Token
 	var blockNode *Node
 	token, isFunc := consume(TokenFunc)
 	if !isFunc {
@@ -114,11 +115,15 @@ func funcStmt() (node *Node, ok bool, err error) {
 	if err != nil {
 		goto end
 	}
+	valTypeToken, err = expectValType()
+	if err != nil {
+		goto end
+	}
 	blockNode, err = block()
 	if err != nil {
 		goto end
 	}
-	node = NewFuncNode(token.Pos(), ident, argss, blockNode)
+	node = NewFuncNode(token.Pos(), ident, argss, valTypeToken.ValType, blockNode)
 	ok = true
 
 	funcStack.pop()

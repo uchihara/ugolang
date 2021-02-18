@@ -16,232 +16,232 @@ func TestUgolang(t *testing.T) {
 			wantError: true,
 		},
 		{
-			code: "func main() { 1; }",
+			code: "func main() int { 1; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { 1;1+2; }",
+			code: "func main() int { 1;1+2; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { var a int; a; }",
+			code: "func main() int { var a int; a; }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { var a int; a=1; }",
+			code: "func main() int { var a int; a=1; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { var a int; a=1;a+2; }",
+			code: "func main() int { var a int; a=1;a+2; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { 1+2; }",
+			code: "func main() int { 1+2; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { 1+2+3; }",
+			code: "func main() int { 1+2+3; }",
 			want: NewNumVal(6),
 		},
 		{
-			code: "func main() { 1+2*3; }",
+			code: "func main() int { 1+2*3; }",
 			want: NewNumVal(7),
 		},
 		{
-			code: "func main() { (1+2)*3; }",
+			code: "func main() int { (1+2)*3; }",
 			want: NewNumVal(9),
 		},
 		{
-			code: "func main() { if 1 { 1; } }",
+			code: "func main() int { if 1 { 1; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0 { 1; } }",
+			code: "func main() int { if 0 { 1; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { var a int; a=0;if a { 1; } }",
+			code: "func main() int { var a int; a=0;if a { 1; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { var a int; a=2;if a { 1; } }",
+			code: "func main() int { var a int; a=2;if a { 1; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0 { 1; } else { 2; } }",
+			code: "func main() int { if 0 { 1; } else { 2; } }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { if 1 { 1; } else { 2; } }",
+			code: "func main() int { if 1 { 1; } else { 2; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { var a int; var b int; a=1; if a { b=1; } else { b=2; } a+b; }",
+			code: "func main() int { var a int; var b int; a=1; if a { b=1; } else { b=2; } a+b; }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { var a int; var b int; a=0; if a { b=1; } else { b=2; } a+b; }",
+			code: "func main() int { var a int; var b int; a=0; if a { b=1; } else { b=2; } a+b; }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { var a int; var b int; a=0;if a{b=1;}else{b=2;}a+b; }",
+			code: "func main() int { var a int; var b int; a=0;if a{b=1;}else{b=2;}a+b; }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { 1 == 1; }",
+			code: "func main() int { 1 == 1; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { 1 != 1; }",
+			code: "func main() int { 1 != 1; }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { var a int; a=1; if a == 1 { 2; } else { 3; } }",
+			code: "func main() int { var a int; a=1; if a == 1 { 2; } else { 3; } }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func main() { var a int; a=0; if a == 1 { 2; } else { 3; } }",
+			code: "func main() int { var a int; a=0; if a == 1 { 2; } else { 3; } }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { if 0<=0 { 1; } else { 0; } }",
+			code: "func main() int { if 0<=0 { 1; } else { 0; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0<0 { 1; } else { 0; } }",
+			code: "func main() int { if 0<0 { 1; } else { 0; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { if 0>=0 { 1; } else { 0; } }",
+			code: "func main() int { if 0>=0 { 1; } else { 0; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0>0 { 1; } else { 0; } }",
+			code: "func main() int { if 0>0 { 1; } else { 0; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { if 0<=1 { 1; } else { 0; } }",
+			code: "func main() int { if 0<=1 { 1; } else { 0; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0<1 { 1; } else { 0; } }",
+			code: "func main() int { if 0<1 { 1; } else { 0; } }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { if 0>=1 { 1; } else { 0; } }",
+			code: "func main() int { if 0>=1 { 1; } else { 0; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { if 0>1 { 1; } else { 0; } }",
+			code: "func main() int { if 0>1 { 1; } else { 0; } }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { var a int; a=0; while a<2 { a=a+1; } a+1; }",
+			code: "func main() int { var a int; a=0; while a<2 { a=a+1; } a+1; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { var aaa int; var b_ int; var c123 int; aaa=1;b_=2;c123=3;aaa+b_+c123; }",
+			code: "func main() int { var aaa int; var b_ int; var c123 int; aaa=1;b_=2;c123=3;aaa+b_+c123; }",
 			want: NewNumVal(6),
 		},
 		{
-			code: "func main() { 123; }",
+			code: "func main() int { 123; }",
 			want: NewNumVal(123),
 		},
 		{
-			code: "func main() { (123+456)*2; }",
+			code: "func main() int { (123+456)*2; }",
 			want: NewNumVal(1158),
 		},
 		{
-			code: "func foo() { 1; } func main() { foo(); }",
+			code: "func foo() int { 1; } func main() int { foo(); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { 1; } func main() { foo() + 2; }",
+			code: "func foo() int { 1; } func main() int { foo() + 2; }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func foo() { if 1 { return 1; } return 2; } func main() { foo(); }",
+			code: "func foo() int { if 1 { return 1; } return 2; } func main() int { foo(); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { if 0 { return 1; } return 2; } func main() { foo(); }",
+			code: "func foo() int { if 0 { return 1; } return 2; } func main() int { foo(); }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func foo() { var a int; a=2; } func main() { var a int; a=1; foo(); a; }",
+			code: "func foo() int { var a int; a=2; } func main() int { var a int; a=1; foo(); a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo() { var a int; return a; } func main() { var a int; a=1; foo(); }",
+			code: "func foo() int { var a int; return a; } func main() int { var a int; a=1; foo(); }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func foo(a) { a; } func main() { foo(1); }",
+			code: "func foo(a) int { a; } func main() int { foo(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func foo(a, b) { a+b; } func main() { foo(1, 2); }",
+			code: "func foo(a, b) int { a+b; } func main() int { foo(1, 2); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func foo(a) { bar(a+1); } func bar(a) { a+1; } func main() { foo(1); }",
+			code: "func foo(a) int { bar(a+1); } func bar(a) int { a+1; } func main() int { foo(1); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func main() { 2-1; }",
+			code: "func main() int { 2-1; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { 1-1; }",
+			code: "func main() int { 1-1; }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func main() { 1-2; }",
+			code: "func main() int { 1-2; }",
 			want: NewNumVal(-1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(0); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(0); }",
 			want: NewNumVal(0),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(1); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(1); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(2); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(2); }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(3); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(3); }",
 			want: NewNumVal(2),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(4); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(4); }",
 			want: NewNumVal(3),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(5); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(5); }",
 			want: NewNumVal(5),
 		},
 		{
-			code: "func fib(n) { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() { fib(6); }",
+			code: "func fib(n) int { if n < 2 { n; } else { fib(n-2) + fib(n-1); } } func main() int { fib(6); }",
 			want: NewNumVal(8),
 		},
 		{
-			code: "var a int; a=1; func foo(a) { bar(a+1); } func bar(b) { a+b; } func main() { var a int; a=2; foo(a); }",
+			code: "var a int; a=1; func foo(a) int { bar(a+1); } func bar(b) int { a+b; } func main() int { var a int; a=2; foo(a); }",
 			want: NewNumVal(4),
 		},
 		{
-			code: "func main() { var a int; a=0; while 1 { if a == 1 { break; } a=a+1; } a; }",
+			code: "func main() int { var a int; a=0; while 1 { if a == 1 { break; } a=a+1; } a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "func main() { var a int; a=0; while 1 { if a == 2 { break; } a=a+1; continue; a=a+10; } a; }",
+			code: "func main() int { var a int; a=0; while 1 { if a == 2 { break; } a=a+1; continue; a=a+10; } a; }",
 			want: NewNumVal(2),
 		},
 		{
 			code: `
-func main() {
+func main() int {
 	var a int;
 	a = 0;
 	while a < 2 {
@@ -254,13 +254,13 @@ func main() {
 		},
 		{
 			code: `
-func mod(a, b) {
+func mod(a, b) int {
 	while a - b >= 0 {
 		a = a - b;
 	}
 	return a;
 }
-func main() {
+func main() int {
 	var s string;
 	s = "";
 	var i int;
@@ -301,11 +301,11 @@ fizzbuzz
 `),
 		},
 		{
-			code: "func main() { var a int = 1; a; }",
+			code: "func main() int { var a int = 1; a; }",
 			want: NewNumVal(1),
 		},
 		{
-			code: "var b int = 1; func main() { var a int = 2; a+b; }",
+			code: "var b int = 1; func main() int { var a int = 2; a+b; }",
 			want: NewNumVal(3),
 		},
 	}
