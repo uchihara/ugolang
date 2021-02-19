@@ -1,7 +1,6 @@
 package ugolang
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -348,9 +347,6 @@ fizzbuzz
 	}
 	for _, tt := range tts {
 		ugo := NewUgolang()
-		if !strings.Contains(tt.code, "func mod") {
-			continue
-		}
 		actual, err := ugo.Exec(tt.code)
 		if (err != nil) != tt.wantError {
 			t.Errorf("%s expect error is %v but got %s", tt.code, tt.wantError, err)
