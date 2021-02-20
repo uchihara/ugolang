@@ -15,10 +15,7 @@ type Ugolang struct {
 // NewUgolang dummy
 func NewUgolang() *Ugolang {
 	funcStack.reset()
-	debug := os.Getenv("DEBUG") == "1"
-	return &Ugolang{
-		Debug: debug,
-	}
+	return &Ugolang{}
 }
 
 var tokens []*Token
@@ -26,6 +23,9 @@ var tokens []*Token
 // Exec dummy
 func (u *Ugolang) Exec(code string) (*Val, error) {
 	debug = u.Debug
+	if os.Getenv("DEBUG") == "1" {
+		debug = true
+	}
 
 	dprintf("code: %s\n", code)
 	var err error
