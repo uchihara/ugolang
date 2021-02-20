@@ -2,6 +2,7 @@ package ugolang
 
 import (
 	"fmt"
+	"os"
 )
 
 // Ugolang dummy
@@ -14,7 +15,10 @@ type Ugolang struct {
 // NewUgolang dummy
 func NewUgolang() *Ugolang {
 	funcStack.reset()
-	return &Ugolang{}
+	debug := os.Getenv("DEBUG") == "1"
+	return &Ugolang{
+		Debug: debug,
+	}
 }
 
 var tokens []*Token
@@ -23,6 +27,7 @@ var tokens []*Token
 func (u *Ugolang) Exec(code string) (*Val, error) {
 	debug = u.Debug
 
+	dprintf("code: %s\n", code)
 	var err error
 	tokens, err = tokenize(code)
 	if err != nil {
