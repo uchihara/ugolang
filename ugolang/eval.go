@@ -22,6 +22,8 @@ func Eval(nodes []*Node) *Val {
 
 func eval(node *Node) (ret *Val, nodeType NodeType) {
 	dprintf("eval start node: %v\n", node)
+	defer dprintf("eval end,  nodeType: %v, ret: %v, new nodeType: %v\n", node.Type, ret, nodeType)
+
 	switch node.Type {
 	case NodeVal:
 		ret, nodeType = node.Val, 0
@@ -49,7 +51,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		r, _ := eval(node.RHS)
 		if l.Eq(r) {
 			ret, nodeType = NewNumVal(1), 0
-			goto end
+			return
 		}
 		ret, nodeType = NewNumVal(0), 0
 	case NodeNe:
@@ -57,7 +59,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		r, _ := eval(node.RHS)
 		if l.Ne(r) {
 			ret, nodeType = NewNumVal(1), 0
-			goto end
+			return
 		}
 		ret, nodeType = NewNumVal(0), 0
 	case NodeLe:
@@ -65,7 +67,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		r, _ := eval(node.RHS)
 		if l.Num <= r.Num {
 			ret, nodeType = NewNumVal(1), 0
-			goto end
+			return
 		}
 		ret, nodeType = NewNumVal(0), 0
 	case NodeLt:
@@ -73,7 +75,7 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		r, _ := eval(node.RHS)
 		if l.Num < r.Num {
 			ret, nodeType = NewNumVal(1), 0
-			goto end
+			return
 		}
 		ret, nodeType = NewNumVal(0), 0
 	case NodeAssign:
@@ -90,11 +92,11 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 		cond, _ := eval(node.Cond)
 		if cond.Num != 0 {
 			ret, nodeType = eval(node.Then)
-			goto end
+			return
 		}
 		if node.Else != nil {
 			ret, nodeType = eval(node.Else)
-			goto end
+			return
 		}
 		ret, nodeType = NewNumVal(0), 0 // FIXME
 	case NodeWhile:
@@ -106,10 +108,10 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 			ret, nodeType = eval(node.Body)
 			switch nodeType {
 			case NodeReturn:
-				goto end
+				return
 			case NodeBreak:
 				ret, nodeType = NewNumVal(0), 0
-				goto end
+				return
 			case NodeContinue:
 				continue
 			}
@@ -155,17 +157,15 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 			ret, nodeType = eval(stmt)
 			switch nodeType {
 			case NodeReturn:
-				goto end
+				return
 			case NodeBreak:
-				goto end
+				return
 			case NodeContinue:
-				goto end
+				return
 			}
 		}
 	default:
 		panic(fmt.Sprintf("unknown type: %d", node.Type))
 	}
-end:
-	dprintf("eval end,  nodeType: %v, ret: %v, new nodeType: %v\n", node.Type, ret, nodeType)
 	return ret, nodeType
 }

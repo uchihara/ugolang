@@ -116,6 +116,8 @@ func validateValTypes(nodes []*Node) error {
 
 func validateValType(node *Node) (err error) {
 	dprintf("validate val type start node: %v\n", node)
+	defer dprintf("validate val type end,  nodeType: %v, err: %v\n", node.Type, err)
+
 	switch node.Type {
 	// case NodeVal:
 	case NodeDefVar:
@@ -124,7 +126,9 @@ func validateValType(node *Node) (err error) {
 			r := evalValType(node.RHS)
 			if l != r {
 				err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatched %v and %v on declare", l, r))
-				goto end
+				if err != nil {
+					return
+				}
 			}
 		}
 	case NodeAdd, NodeSub, NodeMul, NodeEq, NodeNe, NodeLe, NodeLt, NodeAssign:
@@ -132,31 +136,33 @@ func validateValType(node *Node) (err error) {
 		r := evalValType(node.RHS)
 		if l == 0 || r == 0 || l != r {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatched %v and %v on binnode", l, r))
-			goto end
+			if err != nil {
+				return
+			}
 		}
 	// case NodeVar:
 	// bug check
 	case NodeIf:
 		err = validateValType(node.Then)
 		if err != nil {
-			goto end
+			return
 		}
 		if node.Else != nil {
-			err := validateValType(node.Else)
+			err = validateValType(node.Else)
 			if err != nil {
-				return err
+				return
 			}
 		}
 	case NodeWhile:
 		err = validateValType(node.Body)
 		if err != nil {
-			goto end
+			return
 		}
 	case NodeFunc:
 		funcNameStack.push(node.Ident)
 		err = validateValType(node.Body)
 		if err != nil {
-			goto end
+			return
 		}
 		funcNameStack.pop()
 	case NodeCall:
@@ -164,11 +170,11 @@ func validateValType(node *Node) (err error) {
 		fn, ok := funcTable.Lookup(funcName)
 		if !ok {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("call %s but is not defined", funcName))
-			goto end
+			return
 		}
 		if len(node.Params) != len(fn.Args) {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("# of args mismatch on call function %s", funcName))
-			goto end
+			return
 		}
 		valTypes := make([]ValType, 0)
 		for _, param := range node.Params {
@@ -180,12 +186,12 @@ func validateValType(node *Node) (err error) {
 			valType := evalValType(fn.Args[i])
 			if valType != valTypes[i] {
 				err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatch %v and %v on call function", valType, valTypes[i]))
-				goto end
+				return
 			}
 		}
 		err = validateValType(fn.Body)
 		if err != nil {
-			goto end
+			return
 		}
 		funcNameStack.pop()
 	case NodeReturn:
@@ -197,7 +203,7 @@ func validateValType(node *Node) (err error) {
 		valType := evalValType(node.Expr)
 		if funcType.RetValType != valType {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatch %v and %v on return", funcType.RetValType, valType))
-			goto end
+			return
 		}
 	// case NodeBreak:
 	// case NodeContinue:
@@ -205,15 +211,13 @@ func validateValType(node *Node) (err error) {
 		for _, stmt := range node.Statements {
 			err = validateValType(stmt)
 			if err != nil {
-				goto end
+				return
 			}
 		}
 	default:
 		dprintf("do nothing for nodeType: %v\n", node.Type)
 	}
-end:
-	dprintf("validate val type end,  nodeType: %v, err: %v\n", node.Type, err)
-	return err
+	return
 }
 func prog() ([]*Node, error) {
 	InitFuncs()
@@ -243,325 +247,305 @@ func prog() ([]*Node, error) {
 	return nodes, nil
 }
 
-func funcStmt() (node *Node, ok bool, err error) {
+func funcStmt() (*Node, bool, error) {
 	dprintf("func start\n")
-	var ident string
-	var argss []*Node
-	var retValTypeToken *Token
-	var blockNode *Node
+	defer dprintf("func end\n")
+
 	token, isFunc := consume(TokenFunc)
 	if !isFunc {
-		goto end
+		return nil, false, nil
 	}
 
-	_, ident, err = expectIdent()
+	_, ident, err := expectIdent()
 	if err != nil {
-		goto end
+		return nil, false, err
 	}
 	funcNameStack.push(ident)
 	funcTable.Define(ident)
-	argss, err = args()
+	argss, err := args()
 	if err != nil {
-		goto end
+		return nil, false, err
 	}
-	retValTypeToken, err = expectValType()
+	retValTypeToken, err := expectValType()
 	if err != nil {
-		goto end
+		return nil, false, err
 	}
 
-	blockNode, err = block()
+	blockNode, err := block()
 	if err != nil {
-		goto end
+		return nil, false, err
 	}
-	node = NewFuncNode(token.Pos(), ident, argss, retValTypeToken.ValType, blockNode)
+	dprintf("blockNode: %v\n", blockNode)
+	node := NewFuncNode(token.Pos(), ident, argss, retValTypeToken.ValType, blockNode)
 	funcTable.Set(ident, argss, retValTypeToken.ValType, blockNode)
-	ok = true
 
 	funcNameStack.pop()
-end:
-	dprintf("func end\n")
-	return node, ok, err
+	return node, true, nil
 }
 
-func args() (args []*Node, err error) {
+func args() ([]*Node, error) {
 	dprintf("args start\n")
-	_, err = expectSign("(")
+	defer dprintf("args end\n")
+
+	_, err := expectSign("(")
 	if err != nil {
-		goto end
+		return nil, err
 	}
-	args = make([]*Node, 0)
+	args := make([]*Node, 0)
 	for len(tokens) > 0 {
-		var ident string
-		var ok bool
-		if _, ok = consumeSign(")"); ok {
+		if _, ok := consumeSign(")"); ok {
 			break
 		}
 		if len(args) != 0 {
-			_, err = expectSign(",")
+			_, err := expectSign(",")
 			if err != nil {
-				goto end
+				return nil, err
 			}
 		}
-		var token *Token
-		var valTypeToken *Token
-		token, ident, err = expectIdent()
+		token, ident, err := expectIdent()
 		if err != nil {
-			goto end
+			return nil, err
 		}
-		valTypeToken, err = expectValType()
+		valTypeToken, err := expectValType()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 		if _, ok := funcTable[funcNameStack.peek()].Vars.DefinedLocally(ident); ok {
-			err = NewCompileError(token.Pos(), fmt.Sprintf("redeclared variable found: %s", ident))
-			goto end
+			return nil, NewCompileError(token.Pos(), fmt.Sprintf("redeclared variable found: %s", ident))
 		}
 		funcTable[funcNameStack.peek()].Vars.Define(ident, valTypeToken.ValType)
 		args = append(args, NewVarNode(token.Pos(), ident))
 	}
-end:
-	dprintf("args end\n")
 	return args, err
 }
 
-func params() (params []*Node, err error) {
+func params() ([]*Node, error) {
 	dprintf("params start\n")
-	params = make([]*Node, 0)
+	defer dprintf("params end\n")
+
+	params := make([]*Node, 0)
 	for len(tokens) > 0 {
 		if _, ok := consumeSign(")"); ok {
 			break
 		}
 		if len(params) != 0 {
-			_, err = expectSign(",")
+			_, err := expectSign(",")
 			if err != nil {
-				goto end
+				return nil, err
 			}
 		}
-		var exprNode *Node
-		exprNode, err = expr()
+		exprNode, err := expr()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 		params = append(params, exprNode)
 	}
-end:
-	dprintf("params end\n")
-	return params, err
+	return params, nil
 }
 
-func block() (node *Node, err error) {
+func block() (*Node, error) {
 	dprintf("block start\n")
-	var token *Token
-	token, err = expectSign("{")
+	defer dprintf("block end\n")
+
+	token, err := expectSign("{")
 	if err != nil {
-		goto end
+		return nil, err
 	}
-	node = NewBlockNode(token.Pos())
+	node := NewBlockNode(token.Pos())
 	for len(tokens) > 0 {
-		var stmtNode *Node
-		stmtNode, err = stmt()
+		stmtNode, err := stmt()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 		node.Statements = append(node.Statements, stmtNode)
 		_, ok := consumeSign("}")
 		if ok {
-			goto end
+			return node, nil
 		}
 	}
 	_, err = expectSign("}")
 	if err != nil {
-		goto end
+		return nil, err
 	}
-end:
-	dprintf("block end\n")
-	return node, err
+	return node, nil
 }
 
-func stmt() (node *Node, err error) {
+func stmt() (*Node, error) {
 	dprintf("stmt start\n")
+	defer dprintf("stmt end\n")
+
 	if token, ok := consume(TokenVar); ok {
-		node, err = varStmt(token)
-		goto end
+		return varStmt(token)
 	}
 	if token, ok := consume(TokenReturn); ok {
-		var exprNode *Node
-		exprNode, err = expr()
+		exprNode, err := expr()
 		if err != nil {
-			goto end
+			return nil, err
 		}
-		node = NewReturnNode(token.Pos(), exprNode)
+		node := NewReturnNode(token.Pos(), exprNode)
 		err = expect(TokenEOL)
 		if err != nil {
-			goto end
+			return nil, err
 		}
-		goto end
+		return node, nil
 	}
 	if token, ok := consume(TokenBreak); ok {
-		node = NewNode(token.Pos(), NodeBreak)
-		err = expect(TokenEOL)
+		node := NewNode(token.Pos(), NodeBreak)
+		err := expect(TokenEOL)
 		if err != nil {
-			goto end
+			return nil, err
 		}
-		goto end
+		return node, nil
 	}
 	if token, ok := consume(TokenContinue); ok {
-		node = NewNode(token.Pos(), NodeContinue)
-		err = expect(TokenEOL)
+		node := NewNode(token.Pos(), NodeContinue)
+		err := expect(TokenEOL)
 		if err != nil {
-			goto end
+			return nil, err
 		}
-		goto end
+		return node, nil
 	}
 	if token, ok := consume(TokenIf); ok {
-		node, err = ifStmt(token)
-		goto end
+		return ifStmt(token)
 	}
 	if token, ok := consume(TokenWhile); ok {
-		node, err = whileStmt(token)
-		goto end
+		return whileStmt(token)
 	}
-	node, err = expr()
+	node, err := expr()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	err = expect(TokenEOL)
 	if err != nil {
-		goto end
+		return nil, err
 	}
-end:
-	dprintf("stmt end\n")
-	return node, err
+	return node, nil
 }
 
-func expr() (node *Node, err error) {
+func expr() (*Node, error) {
 	dprintf("expr start\n")
-	node, err = assign()
-	dprintf("expr end\n")
-	return node, err
+	defer dprintf("expr end\n")
+	return assign()
 }
 
-func assign() (node *Node, err error) {
+func assign() (*Node, error) {
 	dprintf("assign start\n")
-	node, err = eq()
+	defer dprintf("assign end\n")
+
+	node, err := eq()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	if token, ok := consumeSign("="); ok {
 		if node.Type != NodeVar {
-			err = NewCompileError(token.Pos(), fmt.Sprintf("expect lhs var but got %v", node.Type))
-			goto end
+			return nil, NewCompileError(token.Pos(), fmt.Sprintf("expect lhs var but got %v", node.Type))
 		}
 
 		_, ok := funcTable[funcNameStack.peek()].Vars.Defined(node.Ident)
 		if !ok {
-			err = NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", node.Ident))
-			goto end
+			return nil, NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", node.Ident))
 		}
-		var assignNode *Node
-		assignNode, err = assign()
+		assignNode, err := assign()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 		node = NewBinNode(token.Pos(), NodeAssign, node, assignNode)
 
 	}
-end:
-	dprintf("assign end\n")
-	return node, err
+	return node, nil
 }
 
-func eq() (node *Node, err error) {
+func eq() (*Node, error) {
 	dprintf("eq start\n")
-	node, err = rel()
+	defer dprintf("eq end\n")
+
+	node, err := rel()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	for len(tokens) > 0 {
-		var rhs *Node
 		if token, ok := consumeSign("=="); ok {
-			rhs, err = rel()
+			rhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeEq, node, rhs)
 		} else if token, ok := consumeSign("!="); ok {
-			rhs, err = rel()
+			rhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeNe, node, rhs)
 		} else {
 			break
 		}
 	}
-end:
-	dprintf("eq end\n")
-	return node, err
+	return node, nil
 }
 
-func rel() (node *Node, err error) {
+func rel() (*Node, error) {
 	dprintf("rel start\n")
-	node, err = add()
+	defer dprintf("rel end\n")
+
+	node, err := add()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	for len(tokens) > 0 {
-		var lhs, rhs *Node
 		if token, ok := consumeSign("<="); ok {
-			rhs, err = rel()
+			rhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 
 			node = NewBinNode(token.Pos(), NodeLe, node, rhs)
 		} else if token, ok := consumeSign("<"); ok {
-			rhs, err = rel()
+			rhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeLt, node, rhs)
 		} else if token, ok := consumeSign(">="); ok {
-			lhs, err = rel()
+			lhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeLe, lhs, node)
 		} else if token, ok := consumeSign(">"); ok {
-			lhs, err = rel()
+			lhs, err := rel()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeLt, lhs, node)
 		} else {
 			break
 		}
 	}
-end:
-	dprintf("rel end\n")
-	return node, err
+
+	return node, nil
 }
 
-func add() (node *Node, err error) {
+func add() (*Node, error) {
 	dprintf("add start\n")
-	node, err = mul()
+	defer dprintf("add end\n")
+
+	node, err := mul()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	dprintf("add lhs: %v\n", node)
 	for len(tokens) > 0 {
-		var rhs *Node
 		if token, ok := consumeSign("+"); ok {
-			rhs, err = mul()
+			rhs, err := mul()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeAdd, node, rhs)
 			dprintf("add rhs: %v\n", node)
 		} else if token, ok := consumeSign("-"); ok {
-			rhs, err = mul()
+			rhs, err := mul()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeSub, node, rhs)
 			dprintf("sub rhs: %v\n", node)
@@ -569,24 +553,23 @@ func add() (node *Node, err error) {
 			break
 		}
 	}
-end:
-	dprintf("add end\n")
-	return node, err
+	return node, nil
 }
 
-func mul() (node *Node, err error) {
+func mul() (*Node, error) {
 	dprintf("mul start\n")
-	var rhs *Node
-	node, err = pri()
+	defer dprintf("mul end\n")
+
+	node, err := pri()
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	dprintf("mul lhs: %v\n", node)
 	for len(tokens) > 0 {
 		if token, ok := consumeSign("*"); ok {
-			rhs, err = pri()
+			rhs, err := pri()
 			if err != nil {
-				goto end
+				return nil, err
 			}
 			node = NewBinNode(token.Pos(), NodeMul, node, rhs)
 			dprintf("mul rhs: %v\n", node)
@@ -594,142 +577,126 @@ func mul() (node *Node, err error) {
 			break
 		}
 	}
-end:
-	dprintf("mul end\n")
-	return node, err
+	return node, nil
 }
 
-func pri() (node *Node, err error) {
+func pri() (*Node, error) {
 	dprintf("pri start\n")
-	var token *Token
-	var ident string
-	var ok bool
-	var paramss []*Node
-	if token, ok = consumeSign("("); ok {
-		node, err = expr()
+	defer dprintf("pri end\n")
+
+	if _, ok := consumeSign("("); ok {
+		node, err := expr()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 		_, err = expectSign(")")
-		goto end
+		if err != nil {
+			return nil, err
+		}
+		return node, err
 	}
 
-	token, ident, ok = consumeIdent()
+	token, ident, ok := consumeIdent()
 	if ok {
 		if token, ok = consumeSign("("); ok {
-			paramss, err = params()
+			paramss, err := params()
 			if err != nil {
-				goto end
+				return nil, err
 			}
-			node = NewCallNode(token.Pos(), ident, paramss)
-			goto end
+			return NewCallNode(token.Pos(), ident, paramss), nil
 		}
 
 		if _, ok := funcTable[funcNameStack.peek()].Vars.Defined(ident); !ok {
-			err = NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", ident))
-			goto end
+			return nil, NewCompileError(token.Pos(), fmt.Sprintf("undefined variable found: %s", ident))
 		}
-		node = NewVarNode(token.Pos(), ident)
-		goto end
+		return NewVarNode(token.Pos(), ident), nil
 	}
 
-	node, err = val()
+	node, err := val()
 	if err != nil {
-		goto end
+		return nil, err
 	}
-end:
-	dprintf("pri end\n")
-	return node, err
+	return node, nil
 }
 
-func val() (node *Node, err error) {
+func val() (*Node, error) {
 	dprintf("val start\n")
-	var token *Token
+	defer dprintf("val end\n")
+
 	if len(tokens) == 0 {
-		err = NewCompileError(nil, fmt.Sprintf("expect val but no more tokens"))
-		goto end
+		return nil, NewCompileError(nil, fmt.Sprintf("expect val but no more tokens"))
 	}
-	token = tokens[0]
+	token := tokens[0]
 	if token.Type != TokenVal {
-		err = NewCompileError(token.Pos(), fmt.Sprintf("expect val but no got %v", token))
-		goto end
+		return nil, NewCompileError(token.Pos(), fmt.Sprintf("expect val but no got %v", token))
 	}
 	tokens = tokens[1:]
-	node = NewValNode(token.Pos(), token.Val)
-end:
-	dprintf("val end\n")
-	return node, err
+	return NewValNode(token.Pos(), token.Val), nil
 }
 
-func varStmt(varToken *Token) (node *Node, err error) {
+func varStmt(varToken *Token) (*Node, error) {
 	dprintf("var start\n")
-	var ident string
+	defer dprintf("var end\n")
+
+	_, ident, err := expectIdent()
+	if err != nil {
+		return nil, err
+	}
+	valTypeToken, err := expectValType()
+	if err != nil {
+		return nil, err
+	}
 	var rhs *Node
-	var valTypeToken *Token
-	_ = valTypeToken // FIXME
-	_, ident, err = expectIdent()
-	if err != nil {
-		goto end
-	}
-	valTypeToken, err = expectValType()
-	if err != nil {
-		goto end
-	}
 	if _, ok := consumeSign("="); ok {
 		rhs, err = expr()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 	}
 
-	node = NewDefVarNode(varToken.Pos(), ident, valTypeToken.ValType, rhs)
+	node := NewDefVarNode(varToken.Pos(), ident, valTypeToken.ValType, rhs)
 
 	err = expect(TokenEOL)
 	if err != nil {
-		goto end
+		return nil, err
 	}
 	funcTable[funcNameStack.peek()].Vars.Define(ident, valTypeToken.ValType)
-end:
-	dprintf("var end\n")
-	return node, err
+	return node, nil
 }
 
-func ifStmt(ifToken *Token) (node *Node, err error) {
+func ifStmt(ifToken *Token) (*Node, error) {
 	dprintf("if start\n")
-	var condNode, thenNode, elseNode *Node
-	condNode, err = expr()
+	defer dprintf("if end\n")
+
+	condNode, err := expr()
 	if err != nil {
-		goto end
+		return nil, err
 	}
-	thenNode, err = block()
+	thenNode, err := block()
 	if err != nil {
-		goto end
+		return nil, err
 	}
+	var elseNode *Node
 	if _, ok := consume(TokenElse); ok {
 		elseNode, err = block()
 		if err != nil {
-			goto end
+			return nil, err
 		}
 	}
-	node = NewIfNode(ifToken.Pos(), condNode, thenNode, elseNode)
-end:
-	dprintf("if end\n")
-	return node, err
+	return NewIfNode(ifToken.Pos(), condNode, thenNode, elseNode), nil
 }
 
-func whileStmt(whileToken *Token) (node *Node, err error) {
-	var condNode, bodyNode *Node
+func whileStmt(whileToken *Token) (*Node, error) {
 	dprintf("while start\n")
-	condNode, err = expr()
+	defer dprintf("while end\n")
+
+	condNode, err := expr()
 	if err != nil {
-		goto end
+		return nil, err
 	}
-	bodyNode, err = block()
+	bodyNode, err := block()
 	if err != nil {
-		goto end
+		return nil, err
 	}
-	node = NewWhileNode(whileToken.Pos(), condNode, bodyNode)
-end:
-	dprintf("while end\n")
-	return node, err
+	return NewWhileNode(whileToken.Pos(), condNode, bodyNode), nil
 }
