@@ -37,11 +37,11 @@ func NewNestedVars(depth int) *NestedVarsType {
 // Get dummy
 func (v NestedVarsType) Get(name string) *Val {
 	if val, ok := (*v.locals)[name]; ok {
-		dprintf("var get locally %s:%vn", name, val)
+		dprintf("var get locally %s:%v\n", name, val)
 		return val
 	}
 	if val, ok := (*v.globals)[name]; ok {
-		dprintf("var get globally %s:%vn", name, val)
+		dprintf("var get globally %s:%v\n", name, val)
 		return val
 	}
 	dprintf("var no get %s\n", name)
