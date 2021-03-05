@@ -260,7 +260,7 @@ func mod(a int, b int) int {
 	}
 	return a;
 }
-func main() int {
+func main() string {
 	var s string;
 	s = "";
 	var i int;
@@ -343,6 +343,10 @@ fizzbuzz
 		{
 			code:      `func main() int { foo(); }`,
 			wantError: true,
+		},
+		{
+			code: "func main() int { foo(); } func foo() int { 1; }",
+			want: NewNumVal(1),
 		},
 	}
 	for _, tt := range tts {

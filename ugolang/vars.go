@@ -1,5 +1,9 @@
 package ugolang
 
+import (
+	"fmt"
+)
+
 // VarsType dummy
 type VarsType map[string]*Val
 
@@ -10,6 +14,15 @@ type NestedVarsType struct {
 	depth   int
 	globals *VarsType
 	locals  *VarsType
+}
+
+func (v VarsType) String() string {
+	str := fmt.Sprintf("# of vars: %d", len(v))
+	for name, val := range v {
+		str += ","
+		str += fmt.Sprintf("%s=%v", name, val)
+	}
+	return str
 }
 
 // NewNestedVars dummy
@@ -73,4 +86,14 @@ func (v NestedVarsType) DefinedLocally(name string) (ValType, bool) {
 		valType = val.Type
 	}
 	return valType, ok
+}
+
+// GlobalString dummy
+func (v NestedVarsType) GlobalString() string {
+	return v.globals.String()
+}
+
+// LocalString dummy
+func (v NestedVarsType) LocalString() string {
+	return v.locals.String()
 }

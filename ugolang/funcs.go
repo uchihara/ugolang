@@ -10,13 +10,14 @@ type FuncType struct {
 	Args       []*Node
 	RetValType ValType
 	Body       *Node
+	Vars       *NestedVarsType
 	IsNative   bool
 	nativeFunc func(args []interface{}) *Val
 }
 
 type funcMap map[string]FuncType
 
-var funcs funcMap
+var funcTable funcMap
 
 type nativeFunc struct {
 	name       string
@@ -67,9 +68,13 @@ var nativeFuncs = []nativeFunc{
 
 // InitFuncs dummy
 func InitFuncs() {
-	funcs = funcMap{}
+	funcTable = funcMap{
+		".global": FuncType{
+			Vars: NewNestedVars(0),
+		},
+	}
 	for _, nativeFunc := range nativeFuncs {
-		funcs[nativeFunc.name] = FuncType{
+		funcTable[nativeFunc.name] = FuncType{
 			IsNative:   true,
 			Name:       nativeFunc.name,
 			RetValType: nativeFunc.retValType,
@@ -80,7 +85,7 @@ func InitFuncs() {
 
 // CallNative dummy
 func (f FuncType) CallNative(name string, vals []*Val) *Val {
-	fn := funcs[name]
+	fn := funcTable[name]
 	params := make([]interface{}, 0)
 	for _, v := range vals {
 		if v.Type == NumVal {
@@ -92,13 +97,19 @@ func (f FuncType) CallNative(name string, vals []*Val) *Val {
 	return fn.nativeFunc(params)
 }
 
-func (f funcMap) Define(name string, args []*Node, retValType ValType, body *Node) {
+func (f funcMap) Define(name string) {
 	f[name] = FuncType{
-		Name:       name,
-		Args:       args,
-		RetValType: retValType,
-		Body:       body,
+		Name: name,
+		Vars: NewNestedVars(1),
 	}
+}
+
+func (f funcMap) Set(name string, args []*Node, retValType ValType, body *Node) {
+	m := f[name]
+	m.Args = args
+	m.RetValType = retValType
+	m.Body = body
+	f[name] = m
 }
 
 func (f funcMap) Lookup(name string) (FuncType, bool) {
@@ -121,6 +132,21 @@ type Frame struct {
 type FuncStack []Frame
 
 var funcStack FuncStack
+
+func (s FuncStack) String() string {
+	str := ""
+	for i, stack := range s {
+		if str != "" {
+			str += ","
+		}
+		str += fmt.Sprintf("%d: %v", i, stack)
+	}
+	return str
+}
+
+func (f Frame) String() string {
+	return fmt.Sprintf("funcName: %s, var: %s", f.funcName, f.vars.LocalString())
+}
 
 func (s *FuncStack) reset() {
 	(*s) = []Frame{}

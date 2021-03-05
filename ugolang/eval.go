@@ -6,9 +6,8 @@ import (
 
 // Eval dummy
 func Eval(nodes []*Node) *Val {
-	InitFuncs()
 	funcStack.reset()
-	funcStack.push("main")
+	funcStack.push(".global")
 	var ret *Val
 	for _, node := range nodes {
 		dprintf("node=%v\n", node)
@@ -116,12 +115,14 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 			}
 		}
 	case NodeFunc:
-		funcName := node.Ident
-		funcs.Define(funcName, node.Args, node.ValType, node.Body)
+		dprintf("funcTable[%s]: %v\n", node.Ident, funcTable[node.Ident])
+		// funcName := node.Ident
+		// funcTable.Define(funcName, node.Args, node.ValType, node.Body)
+		// eval(node.Body)
 		ret, nodeType = NewNumVal(0), 0
 	case NodeCall:
 		funcName := node.Ident
-		fn, ok := funcs.Lookup(funcName)
+		fn, ok := funcTable.Lookup(funcName)
 		if !ok {
 			panic(fmt.Sprintf("call %s but is not defined", funcName))
 		}
@@ -167,35 +168,4 @@ func eval(node *Node) (ret *Val, nodeType NodeType) {
 end:
 	dprintf("eval end,  nodeType: %v, ret: %v, new nodeType: %v\n", node.Type, ret, nodeType)
 	return ret, nodeType
-}
-
-// EvalValType dummy
-func EvalValType(node *Node) ValType {
-	switch node.Type {
-	case NodeVar:
-		valType, ok := funcStack.peek().vars.Defined(node.Ident)
-		if !ok {
-			panic(fmt.Sprintf("invalid state var %s is not defined", node.Ident))
-		}
-		return valType
-	case NodeVal:
-		return node.Val.Type
-	case NodeAdd, NodeSub, NodeMul:
-		l := EvalValType(node.LHS)
-		r := EvalValType(node.RHS)
-		if l != r {
-			return 0
-		}
-		return l
-	case NodeAssign:
-		return EvalValType(node.RHS)
-	case NodeCall:
-		funcType, ok := funcs.Lookup(node.Ident)
-		if !ok {
-			panic(fmt.Sprintf("invalid state func %s is not defined", node.Ident))
-		}
-		return funcType.RetValType
-	default:
-		return 0
-	}
 }
