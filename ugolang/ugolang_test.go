@@ -345,6 +345,22 @@ fizzbuzz
 			wantError: true,
 		},
 		{
+			code:      `func main() int { foo(); } func foo(a int) int { 0; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { foo(1, 2); } func foo(a int) int { 0; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() int { foo("1"); } func foo(a int) int { 0; }`,
+			wantError: true,
+		},
+		{
+			code:      `func main() string { foo("1"); } func foo(a string) string { return 0; }`,
+			wantError: true,
+		},
+		{
 			code: "func main() int { foo(); } func foo() int { 1; }",
 			want: NewNumVal(1),
 		},
