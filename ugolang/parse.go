@@ -73,8 +73,8 @@ func expectIdent() (*Token, string, error) {
 	return token, ident, nil
 }
 
-// evalValType dummy
-func evalValType(node *Node) ValType {
+// guessValType dummy
+func guessValType(node *Node) ValType {
 	switch node.Type {
 	case NodeVar:
 		valType, ok := funcTable[funcNameStack.peek()].Vars.Defined(node.Ident)
@@ -85,14 +85,14 @@ func evalValType(node *Node) ValType {
 	case NodeVal:
 		return node.Val.Type
 	case NodeAdd, NodeSub, NodeMul:
-		l := evalValType(node.LHS)
-		r := evalValType(node.RHS)
+		l := guessValType(node.LHS)
+		r := guessValType(node.RHS)
 		if l != r {
 			return 0
 		}
 		return l
 	case NodeAssign:
-		return evalValType(node.RHS)
+		return guessValType(node.RHS)
 	case NodeCall:
 		funcType, ok := funcTable.Lookup(node.Ident)
 		if !ok {
@@ -123,7 +123,7 @@ func validateValType(node *Node) (err error) {
 	case NodeDefVar:
 		l := node.ValType
 		if node.RHS != nil {
-			r := evalValType(node.RHS)
+			r := guessValType(node.RHS)
 			if l != r {
 				err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatched %v and %v on declare", l, r))
 				if err != nil {
@@ -132,8 +132,8 @@ func validateValType(node *Node) (err error) {
 			}
 		}
 	case NodeAdd, NodeSub, NodeMul, NodeEq, NodeNe, NodeLe, NodeLt, NodeAssign:
-		l := evalValType(node.LHS)
-		r := evalValType(node.RHS)
+		l := guessValType(node.LHS)
+		r := guessValType(node.RHS)
 		if l == 0 || r == 0 || l != r {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatched %v and %v on binnode", l, r))
 			if err != nil {
@@ -178,12 +178,12 @@ func validateValType(node *Node) (err error) {
 		}
 		valTypes := make([]ValType, 0)
 		for _, param := range node.Params {
-			valType := evalValType(param)
+			valType := guessValType(param)
 			valTypes = append(valTypes, valType)
 		}
 		funcNameStack.push(funcName)
 		for i := range valTypes {
-			valType := evalValType(fn.Args[i])
+			valType := guessValType(fn.Args[i])
 			if valType != valTypes[i] {
 				err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatch %v and %v on call function", valType, valTypes[i]))
 				return
@@ -200,7 +200,7 @@ func validateValType(node *Node) (err error) {
 		if !ok {
 			panic(fmt.Sprintf("invalid state func %s is not defined", funcName))
 		}
-		valType := evalValType(node.Expr)
+		valType := guessValType(node.Expr)
 		if funcType.RetValType != valType {
 			err = NewCompileError(node.TokenPos, fmt.Sprintf("type mismatch %v and %v on return", funcType.RetValType, valType))
 			return
