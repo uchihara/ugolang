@@ -60,7 +60,7 @@ func matchSigns(signs []string, code string) (int, bool) {
 
 func matchPattern(pattern, code string) (int, bool) {
 	re := regexp.MustCompile(pattern)
-	loc := re.FindStringIndex(code[0:len(code)])
+	loc := re.FindStringIndex(code[0:])
 	if len(loc) != 2 {
 		return 0, false
 	}
@@ -157,7 +157,7 @@ func tokenize(code string) ([]*Token, error) {
 			continue
 		}
 
-		if matchLen, matched, matchedIdx := matchTokens(tokenPairs, code[pos:len(code)]); matched {
+		if matchLen, matched, matchedIdx := matchTokens(tokenPairs, code[pos:]); matched {
 			token := tokenPairs[matchedIdx].fn(line, col)
 			tokens = append(tokens, token)
 			pos += matchLen
@@ -165,7 +165,7 @@ func tokenize(code string) ([]*Token, error) {
 			continue
 		}
 
-		if matchLen, matched := matchPattern("^[0-9]+", code[pos:len(code)]); matched {
+		if matchLen, matched := matchPattern("^[0-9]+", code[pos:]); matched {
 			numStr := code[pos : pos+matchLen]
 			num, err := strconv.ParseInt(numStr, 10, 64)
 			if err != nil {
@@ -177,7 +177,7 @@ func tokenize(code string) ([]*Token, error) {
 			continue
 		}
 
-		if matchLen, matched := matchPattern("^[A-Za-z0-9_]+", code[pos:len(code)]); matched {
+		if matchLen, matched := matchPattern("^[A-Za-z0-9_]+", code[pos:]); matched {
 			tokens = append(tokens, NewIdentToken(line, col, code[pos:pos+matchLen]))
 			pos += matchLen
 			col += matchLen
@@ -185,14 +185,14 @@ func tokenize(code string) ([]*Token, error) {
 		}
 
 		signs := []string{"==", "!=", "<=", ">=", "<", ">", "=", "+", "-", "*", "(", ")", "{", "}", ","}
-		if matchLen, matched := matchSigns(signs, code[pos:len(code)]); matched {
+		if matchLen, matched := matchSigns(signs, code[pos:]); matched {
 			tokens = append(tokens, NewSignToken(line, col, code[pos:pos+matchLen]))
 			pos += matchLen
 			col += matchLen
 			continue
 		}
 
-		if matchLen, matched, str, err := matchString(code[pos:len(code)]); matched || err != nil {
+		if matchLen, matched, str, err := matchString(code[pos:]); matched || err != nil {
 			if err != nil {
 				return nil, NewCompileError(NewTokenPos(line, col), err.Error())
 			}
